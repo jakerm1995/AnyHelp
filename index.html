@@ -4,69 +4,139 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AnyHelp? – Hyperlocal Tasks</title>
+  <meta name="description" content="Find real neighbours to help with quick tasks near you. Post tasks, match fast, and get it done today." />
+  <link rel="preconnect" href="https://api.mapbox.com" />
   <style>
-    :root { --brand:#0a7aff; --ink:#111; --bg:#f7f8fa; --card:#fff; --muted:#6b7280; }
-    * { box-sizing: border-box; }
-    body { font-family: system-ui, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
-    header { background: var(--brand); color: #fff; padding: 1rem; text-align: center; }
-    main { padding: 1rem; max-width: 960px; margin: 0 auto; }
-    footer { padding: 1rem; text-align: center; color: var(--muted); }
-    section { background: var(--card); padding: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 1rem; }
-    .grid { display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid textarea { grid-column: 1 / -1; min-height: 96px; }
-    .grid .row { grid-column: 1 / -1; display: flex; gap: .5rem; align-items: center; }
-    input, select, textarea, button { width: 100%; padding: .65rem .75rem; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 1rem; background: #fff; }
-    input:focus, select:focus, textarea:focus { outline: 2px solid #dbeafe; border-color: #bfdbfe; }
-    button { background: var(--brand); color: #fff; border: none; cursor: pointer; font-weight: 600; }
-    button:hover { filter: brightness(.95); }
-    .hint { color: var(--muted); margin-top: .5rem; }
-    .cards { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
-    .card { border: 1px solid #eef2f7; border-radius: 12px; padding: .75rem; background: #fff; display: grid; gap: .5rem; }
-    .card .title { font-weight: 700; }
-    .meta { display: flex; flex-wrap: wrap; gap: .5rem; color: var(--muted); font-size: .9rem; }
-    .badge { display: inline-flex; align-items: center; gap: .35rem; padding: .25rem .5rem; border-radius: 999px; background: #eef6ff; color: #0b62d6; font-size: .8rem; }
-    .price { font-weight: 700; }
-    .actions { display: flex; gap: .5rem; }
-    .actions button { flex: none; padding: .5rem .75rem; border-radius: 8px; }
-    .geo-status { font-size: .85rem; color: var(--muted); }
-    @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+    :root{
+      --brand:#0a7aff; --brand-2:#6aa9ff; --ink:#0f172a; --muted:#64748b; --bg:#f6f7fb; --card:#ffffff; --ok:#16a34a; --warn:#d97706; --danger:#ef4444;
+      --shadow:0 10px 25px rgba(17,24,39,.06),0 2px 6px rgba(17,24,39,.05);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f7faff 0%,#f6f7fb 60%)}
+
+    /* App shell */
+    header.app{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--brand),#3b82f6);color:#fff}
+    .nav{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 16px}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}
+    .logo i{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:#fff1;border:1px solid #ffffff33}
+    .nav a{color:#fff;text-decoration:none;padding:8px 10px;border-radius:10px}
+    .nav a.active{background:#ffffff1f}
+    .nav-right{margin-left:auto;display:flex;gap:8px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+    .btn.secondary{background:#fff;color:var(--brand)}
+    .btn.ghost{background:transparent;color:#fff;border:1px solid #ffffff55;box-shadow:none}
+
+    main{max-width:1100px;margin:0 auto;padding:18px}
+
+    /* Hero */
+    .hero{margin-top:18px;background:radial-gradient(1200px 450px at 20% -20%,#eaf2ff,transparent),
+                     linear-gradient(180deg,#ffffff, #f7faff);border-radius:20px;padding:28px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.15fr .85fr;gap:24px}
+    .hero h1{margin:0 0 8px 0;font-size:clamp(26px,4vw,36px)}
+    .hero p{margin:0 0 18px 0;color:var(--muted)}
+    .hero .cta{display:flex;gap:10px;flex-wrap:wrap}
+    .statgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+    .stat{background:#fff;border:1px solid #eef1f7;border-radius:12px;padding:10px;text-align:center}
+    .stat b{font-size:20px}
+
+    .card{background:var(--card);border:1px solid #eef1f7;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .section{margin:18px 0;padding:18px}
+
+    .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-1{display:grid;gap:12px}
+    @media (max-width: 860px){.hero{grid-template-columns:1fr}.grid,.grid-3{grid-template-columns:1fr}}
+
+    input,select,textarea{width:100%;padding:12px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;font-size:16px}
+    textarea{min-height:110px}
+    input:focus,select:focus,textarea:focus{outline:2px solid #dbeafe;border-color:#bfdbfe}
+
+    .subtitle{margin:0 0 12px;font-weight:800}
+    .muted{color:var(--muted)}
+
+    /* Task list */
+    ul.cards{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+    .task{padding:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .badge{display:inline-flex;gap:6px;align-items:center;background:#eef6ff;color:#0b62d6;border-radius:999px;padding:3px 8px;font-size:12px}
+    .price{font-weight:800}
+
+    .footer{color:var(--muted);text-align:center;padding:36px 8px}
+
+    /* Router pages (hidden by default) */
+    .page{display:none}
+    .page.active{display:block}
+
+    /* Toast */
+    .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s}
+    .toast.show{opacity:1}
+
+    /* Table for profile */
+    .kv{display:grid;grid-template-columns:180px 1fr;gap:8px;align-items:center}
+    .kv label{color:var(--muted);font-size:14px}
+
+    .hr{height:1px;background:#e8ecf5;margin:16px 0}
   </style>
 </head>
 <body>
-  <header>
-    <h1>AnyHelp?</h1>
-    <p>Real neighbours, real help, right now</p>
+  <header class="app">
+    <nav class="nav">
+      <div class="logo"><i>🤝</i><span>AnyHelp?</span></div>
+      <a href="#/home" id="nav-home" class="active">Home</a>
+      <a href="#/tasks" id="nav-tasks">Tasks</a>
+      <a href="#/profile" id="nav-profile">Profile</a>
+      <a href="#/about" id="nav-about">About</a>
+      <div class="nav-right">
+        <button class="btn secondary" id="btn-post-cta">Post a task</button>
+        <a class="btn ghost" href="#/verify">Get verified</a>
+      </div>
+    </nav>
   </header>
 
   <main>
-    <section class="post-task">
-      <h2>Post a Task</h2>
-      <div class="grid">
-        <input type="text" id="taskTitle" placeholder="Task title" />
-        <textarea id="taskDescription" placeholder="Describe the task..."></textarea>
-        <select id="taskCategory">
-          <option value="">Category</option>
-          <option>Moving and lifting</option>
-          <option>Repairs and DIY</option>
-          <option>Gardening</option>
-          <option>Errands</option>
-          <option>Tool lending</option>
-          <option>Pet help</option>
-        </select>
-        <input type="text" id="taskPostcode" placeholder="Postcode, e.g. SA1 6ET" />
-        <input type="number" id="taskPrice" placeholder="Offer £" min="0" step="1" />
-        <input type="datetime-local" id="taskWhen" />
-        <label class="row">
-          <input type="checkbox" id="needsVerified" />
-          Prefer verified neighbours only
-        </label>
-        <button id="postBtn">Post Task</button>
+    <!-- HERO -->
+    <section class="hero card page active" id="page-home">
+      <div>
+        <h1>Real neighbours, real help, right now</h1>
+        <p class="muted">Post a quick task or borrow a tool and get matched with someone nearby in minutes. Start with small, pre-priced jobs that fit student life and city living.</p>
+        <div class="cta">
+          <button class="btn" id="hero-post">Post a task</button>
+          <a class="btn secondary" href="#/tasks">Find tasks near me</a>
+        </div>
+        <div class="statgrid">
+          <div class="stat"><b id="stat-users">0</b><div class="muted">neighbours here</div></div>
+          <div class="stat"><b id="stat-completed">0</b><div class="muted">tasks completed</div></div>
+          <div class="stat"><b id="stat-eta">&lt;10m</b><div class="muted">typical match time</div></div>
+        </div>
       </div>
-      <p class="hint">Never post sensitive info, agree to meet in public for first jobs, use handover codes.</p>
+      <div class="card section">
+        <h3 class="subtitle">Post a Task</h3>
+        <div class="grid">
+          <input id="taskTitle" placeholder="Task title (e.g., Carry a sofa upstairs)"/>
+          <select id="taskCategory">
+            <option value="">Category</option>
+            <option>Moving and lifting</option>
+            <option>Repairs and DIY</option>
+            <option>Gardening</option>
+            <option>Errands</option>
+            <option>Tool lending</option>
+            <option>Pet help</option>
+          </select>
+          <textarea id="taskDescription" placeholder="Describe the task…" class="grid-1"></textarea>
+          <input id="taskPostcode" placeholder="Postcode, e.g., SA1 6ET"/>
+          <input type="number" id="taskPrice" placeholder="Offer £" min="0" step="1"/>
+          <input type="datetime-local" id="taskWhen"/>
+          <label class="row"><input type="checkbox" id="needsVerified"/> Prefer verified neighbours only</label>
+          <button id="postBtn" class="btn">Post Task</button>
+        </div>
+        <p class="muted" style="margin-top:10px">Never post sensitive info. Meet in public for first jobs. Use handover codes on item lending.</p>
+      </div>
     </section>
 
-    <section class="filters">
-      <h2>Find Tasks</h2>
+    <!-- TASKS PAGE -->
+    <section class="card section page" id="page-tasks">
+      <h2 class="subtitle">Find Tasks</h2>
       <div class="grid">
         <input type="search" id="q" placeholder="Search title or description" />
         <select id="filterCategory">
@@ -85,266 +155,251 @@
           <option value="priceLow">Price, low to high</option>
           <option value="trust">Trust first</option>
         </select>
-        <input type="text" id="myPostcode" placeholder="Your postcode for distance" />
-        <button id="locateBtn">Use my location</button>
+        <input id="myPostcode" placeholder="Your postcode for distance"/>
+        <button class="btn" id="locateBtn">Use my location</button>
       </div>
-      <div class="geo-status" id="geoStatus">Geocoding cache: 0 postcodes</div>
-    </section>
-
-    <section class="task-list">
-      <h2>Available Tasks</h2>
+      <div class="muted" id="geoStatus" style="margin:6px 0 12px">Geocoding cache: 0 postcodes</div>
       <ul id="tasks" class="cards"></ul>
     </section>
+
+    <!-- PROFILE PAGE -->
+    <section class="card section page" id="page-profile">
+      <h2 class="subtitle">Your Profile</h2>
+      <div class="kv">
+        <label>Name</label>
+        <input id="p_name" placeholder="e.g., Alex" />
+        <label>Email</label>
+        <input id="p_email" placeholder="name@uni.ac.uk" />
+        <label>University email verified</label>
+        <div class="row"><input type="checkbox" id="p_uni_verified"/> <span class="muted">Tick if you’ve verified a .ac.uk email</span></div>
+        <label>Skills (comma separated)</label>
+        <input id="p_skills" placeholder="lifting, drill, tech setup" />
+        <label>Home postcode</label>
+        <input id="p_pc" placeholder="SA1 6ET" />
+        <label>Availability</label>
+        <input id="p_avail" placeholder="Evenings and weekends"/>
+      </div>
+      <div class="hr"></div>
+      <div class="row">
+        <button class="btn" id="save_profile">Save profile</button>
+        <button class="btn secondary" id="clear_profile">Clear</button>
+      </div>
+      <p class="muted" style="margin-top:8px">Your profile stays on your device for now (local-only). When you choose to get verified later, we’ll store minimal info securely.</p>
+    </section>
+
+    <!-- ABOUT PAGE -->
+    <section class="card section page" id="page-about">
+      <h2 class="subtitle">About AnyHelp</h2>
+      <p>AnyHelp connects neighbours for tiny, everyday tasks—carry a sofa, borrow a drill, quick tech setup—matched in minutes, not days. We start in dense student and city areas so you can find help fast. Safety and simplicity are the core: transparent pricing, optional verification badges, and handover codes for item lending.</p>
+      <div class="grid-3" style="margin-top:12px">
+        <div class="card section">
+          <h3 class="subtitle">How it works</h3>
+          <ol>
+            <li>Post a quick task (or search nearby).</li>
+            <li>Nearest available helper accepts.</li>
+            <li>Meet, do the thing, confirm completion.</li>
+          </ol>
+        </div>
+        <div class="card section">
+          <h3 class="subtitle">Safety basics</h3>
+          <ul>
+            <li>Meet in public for first jobs.</li>
+            <li>Don’t share sensitive info in posts.</li>
+            <li>Use handover codes for lending.</li>
+            <li>Only do tasks you’re comfortable with.</li>
+          </ul>
+        </div>
+        <div class="card section">
+          <h3 class="subtitle">What’s next</h3>
+          <ul>
+            <li>Optional background checks for badges.</li>
+            <li>Stripe payments and £1k limited guarantee.</li>
+            <li>Live map view with arrival ETA.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- VERIFY PAGE (placeholder) -->
+    <section class="card section page" id="page-verify">
+      <h2 class="subtitle">Get Verified</h2>
+      <p class="muted">Verification increases trust and match rate. For MVP we support a simple email badge:</p>
+      <div class="kv">
+        <label>University email</label>
+        <input id="v_email" placeholder="you@youruni.ac.uk" />
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="v_send">Send verification link</button>
+        <button class="btn secondary" id="v_mark">Mark as verified (demo)</button>
+      </div>
+      <p class="muted" style="margin-top:10px">In production, this would send an email with a sign-in link. For now, the demo button toggles your badge locally.</p>
+    </section>
+
+    <div class="footer">© AnyHelp? – Community powered • Use at your own risk • Get verified for better matches</div>
   </main>
 
-  <footer>
-    <small>© AnyHelp? • Community powered • Use at your own risk • Get verified for better matches</small>
-  </footer>
+  <div class="toast" id="toast"></div>
 
   <script>
-    // ===== CONFIG =====
-    // Replace this with your real Mapbox public token (pk.*). Restrict it to your domain in Mapbox dashboard.
+    // ========= CONFIG =========
+    // Keep Mapbox token public but domain-restricted on your Mapbox dashboard.
     const MAPBOX_TOKEN = "pk.eyJ1IjoiamFrZXJtMTk5NSIsImEiOiJjbWU2c212c3QwMDhpMmpwcWxqaGNnaGx6In0.Am63pVg3I58rTx5ubWzP1Q";
 
-    // ===== Utilities =====
-    const $ = (sel) => document.querySelector(sel);
-    const $all = (sel) => [...document.querySelectorAll(sel)];
-    const LS_KEY = "anyhelp.tasks.v1";
-    const GEO_LS_KEY = "anyhelp.postcodeGeo.v1";
+    // ========= Helpers =========
+    const $ = (s)=>document.querySelector(s);
+    const $$ = (s)=>[...document.querySelectorAll(s)];
+    const LS_TASKS = 'anyhelp.tasks.v2';
+    const LS_GEO = 'anyhelp.geo.v2';
+    const LS_PROFILE = 'anyhelp.profile.v1';
 
-    function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
-    function normPostcode(pc) { return (pc || "").toUpperCase().replace(/\s+/g, "").trim(); }
-    function escapeHtml(s) { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    const toastEl = $('#toast');
+    function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 1800); }
+    function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+    function normPC(pc){ return (pc||'').toUpperCase().replace(/\s+/g,'').trim(); }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
 
-    // Haversine distance in km
-    function distanceKm(a, b) {
-      if (!a || !b) return Infinity;
-      const R = 6371, toRad = (x) => x * Math.PI / 180;
-      const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
-      const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
-      const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
-      return 2 * R * Math.asin(Math.sqrt(h));
-    }
+    // Haversine
+    function distanceKm(a,b){ if(!a||!b) return Infinity; const R=6371,toRad=x=>x*Math.PI/180; const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lon-a.lon); const lat1=toRad(a.lat), lat2=toRad(b.lat); const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
 
-    // ===== Persistence =====
-    function loadTasks() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
-    function saveTasks() { localStorage.setItem(LS_KEY, JSON.stringify(tasks)); }
+    // ========= Storage =========
+    let tasks = []; try{ tasks = JSON.parse(localStorage.getItem(LS_TASKS)) || []; }catch{}
+    let GEO_CACHE = {}; try{ GEO_CACHE = JSON.parse(localStorage.getItem(LS_GEO)) || {}; }catch{}
+    let profile = {}; try{ profile = JSON.parse(localStorage.getItem(LS_PROFILE)) || {}; }catch{}
 
-    let GEO_CACHE = {}; try { GEO_CACHE = JSON.parse(localStorage.getItem(GEO_LS_KEY)) || {}; } catch {}
-    function saveGeoCache() { localStorage.setItem(GEO_LS_KEY, JSON.stringify(GEO_CACHE)); updateGeoStatus(); }
-    function updateGeoStatus() { $("#geoStatus").textContent = `Geocoding cache: ${Object.keys(GEO_CACHE).length} postcodes`; }
+    function saveTasks(){ localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); }
+    function saveGeo(){ localStorage.setItem(LS_GEO, JSON.stringify(GEO_CACHE)); updateGeoStatus(); }
+    function saveProfile(){ localStorage.setItem(LS_PROFILE, JSON.stringify(profile)); }
 
-    // ===== Geocoding via Mapbox =====
-    async function geocodePostcode(pc) {
-      const key = normPostcode(pc);
-      if (!key) return null;
-      if (GEO_CACHE[key]) return GEO_CACHE[key];
+    function updateGeoStatus(){ const n = Object.keys(GEO_CACHE).length; const el = $('#geoStatus'); if(el) el.textContent = `Geocoding cache: ${n} postcodes`; }
+
+    // ========= Mapbox Geocoding =========
+    async function geocodePostcode(pc){ const key = normPC(pc); if(!key) return null; if(GEO_CACHE[key]) return GEO_CACHE[key];
       const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(key)}.json?country=GB&types=postcode&limit=1&access_token=${MAPBOX_TOKEN}`;
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Geocoding failed");
-        const data = await res.json();
-        const f = data.features?.[0];
-        if (!f || !Array.isArray(f.center)) return null;
-        const [lon, lat] = f.center;
-        const loc = { lat, lon };
-        GEO_CACHE[key] = loc;
-        saveGeoCache();
-        return loc;
-      } catch (e) {
-        console.warn("Geocoding error", e);
-        return null;
-      }
+      try{ const res = await fetch(url); if(!res.ok) throw new Error('geocode failed'); const data = await res.json(); const f = data.features?.[0]; if(!f || !Array.isArray(f.center)) return null; const [lon,lat] = f.center; const loc = {lat,lon}; GEO_CACHE[key]=loc; saveGeo(); return loc; } catch(e){ console.warn('Geocode error', e); return null; }
     }
 
-    // ===== State =====
-    let tasks = loadTasks();
-    let myLocation = null; // {lat, lon}
-
-    // Demo seed (optional): uncomment to see tasks immediately
-    // if (!tasks.length) {
-    //   tasks = [
-    //     {id:uid(), title:"Carry a sofa up stairs", description:"2 floors, 15 mins", category:"Moving and lifting", postcode:"SA16ET", price:15, when:null, preferVerified:true, createdAt: Date.now()-3_600_000, status:"open", poster:{name:"Neighbour", verified:true, neighbourVerified:false}},
-    //     {id:uid(), title:"Borrow a drill", description:"Need for 1 hour", category:"Tool lending", postcode:"SA12AB", price:0, when:null, preferVerified:false, createdAt: Date.now()-900_000, status:"open", poster:{name:"Neighbour", verified:false, neighbourVerified:true}}
-    //   ];
-    //   saveTasks();
-    // }
-
-    // ===== Posting =====
-    function postTask() {
-      const title = $("#taskTitle").value.trim();
-      const description = $("#taskDescription").value.trim();
-      const category = $("#taskCategory").value;
-      const postcode = normPostcode($("#taskPostcode").value);
-      const price = Number($("#taskPrice").value);
-      const when = $("#taskWhen").value;
-      const preferVerified = $("#needsVerified").checked;
-
-      if (!title || !description || !postcode) return alert("Please fill in title, description, and postcode.");
-      if (Number.isNaN(price) || price < 0) return alert("Please enter a valid price, £0 or more.");
-
-      const task = {
-        id: uid(), title, description, category, postcode, price,
-        when: when || null, preferVerified,
-        createdAt: Date.now(), status: "open",
-        poster: { name: "Neighbour", verified: Math.random() < 0.35, neighbourVerified: Math.random() < 0.15 }
-      };
-      tasks.unshift(task);
-      saveTasks();
-      displayTasks();
-      clearForm();
+    // ========= Posting tasks =========
+    function postTask(){
+      const title = $('#taskTitle').value.trim();
+      const description = $('#taskDescription').value.trim();
+      const category = $('#taskCategory').value;
+      const postcode = normPC($('#taskPostcode').value);
+      const price = Number($('#taskPrice').value);
+      const when = $('#taskWhen').value || null;
+      const preferVerified = $('#needsVerified').checked;
+      if(!title || !description || !postcode){ toast('Please fill title, description & postcode'); return; }
+      if(Number.isNaN(price) || price < 0){ toast('Enter a valid price (≥ £0)'); return; }
+      const t = { id:uid(), title, description, category, postcode, price, when, preferVerified, createdAt:Date.now(), status:'open', poster:{ name: profile.name||'Neighbour', verified: !!profile.uni_verified, neighbourVerified:false } };
+      tasks.unshift(t); saveTasks(); displayTasks(); clearPostForm(); toast('Task posted'); location.hash = '#/tasks';
+      // Update fake stats
+      bumpStats();
     }
+    function clearPostForm(){ ['#taskTitle','#taskDescription','#taskCategory','#taskPostcode','#taskPrice','#taskWhen'].forEach(sel=>{ const el=$(sel); if(!el) return; if(el.tagName==='SELECT') el.value=''; else el.value=''; }); $('#needsVerified').checked=false; }
 
-    function clearForm() {
-      $("#taskTitle").value = "";
-      $("#taskDescription").value = "";
-      $("#taskCategory").value = "";
-      $("#taskPostcode").value = "";
-      $("#taskPrice").value = "";
-      $("#taskWhen").value = "";
-      $("#needsVerified").checked = false;
-    }
+    // ========= Trust score (demo) =========
+    function trustScore(t){ let s=0; if(t.poster?.verified) s+=1; if(t.poster?.neighbourVerified) s+=2; if(t.preferVerified) s+=0.5; return s; }
 
-    // ===== Trust score (demo) =====
-    function trustScore(t) {
-      let s = 0;
-      if (t.poster?.verified) s += 1;
-      if (t.poster?.neighbourVerified) s += 2;
-      if (t.preferVerified) s += 0.5;
-      return s;
-    }
-
-    // ===== Ranking =====
-    function rankTasks(list, myCoords, coordsByTaskId) {
-      const q = $("#q").value.trim().toLowerCase();
-      const cat = $("#filterCategory").value;
-      const sortBy = $("#sortBy").value;
-
-      let out = list.filter(t => t.status === "open");
-      if (q) out = out.filter(t => (t.title + " " + t.description).toLowerCase().includes(q));
-      if (cat) out = out.filter(t => t.category === cat);
-
-      out = out.map(t => {
-        const there = coordsByTaskId[t.id] || null;
-        const dist = myCoords && there ? distanceKm(myCoords, there) : Infinity;
-        return { ...t, _dist: dist, _trust: trustScore(t) };
-      });
-
-      switch (sortBy) {
-        case "nearest": out.sort((a,b) => a._dist - b._dist); break;
-        case "priceHigh": out.sort((a,b) => b.price - a.price); break;
-        case "priceLow": out.sort((a,b) => a.price - b.price); break;
-        case "trust": out.sort((a,b) => (b._trust - a._trust) || (a._dist - b._dist)); break;
-        default: out.sort((a,b) => b.createdAt - a.createdAt);
+    // ========= Render task list =========
+    let myLocation = null; // {lat,lon}
+    async function displayTasks(){
+      const ul = $('#tasks'); if(!ul) return; ul.innerHTML = `<li class="card task"><em>Loading…</em></li>`;
+      // my coords
+      let my = null; if(myLocation) my = myLocation; else { const pc = normPC($('#myPostcode')?.value); if(pc) my = await geocodePostcode(pc); }
+      // geocode unique task postcodes
+      const uniq = [...new Set(tasks.map(t=>normPC(t.postcode)))]; const coords = {}; await Promise.all(uniq.map(async pc=>{ const loc = await geocodePostcode(pc); if(loc) coords[pc]=loc; }));
+      const items = tasks.filter(t=>t.status==='open').map(t=>{ const there = coords[normPC(t.postcode)] || null; const dist = my && there ? distanceKm(my,there) : Infinity; return {...t, _dist:dist, _trust:trustScore(t)} });
+      // filters
+      const q = ($('#q')?.value||'').trim().toLowerCase(); const cat = $('#filterCategory')?.value||''; const sortBy = $('#sortBy')?.value||'recent';
+      let out = items; if(q) out = out.filter(t=> (t.title+" "+t.description).toLowerCase().includes(q)); if(cat) out = out.filter(t=> t.category===cat);
+      switch(sortBy){
+        case 'nearest': out.sort((a,b)=>a._dist-b._dist); break;
+        case 'priceHigh': out.sort((a,b)=>b.price-a.price); break;
+        case 'priceLow': out.sort((a,b)=>a.price-b.price); break;
+        case 'trust': out.sort((a,b)=> (b._trust-a._trust) || (a._dist-b._dist)); break;
+        default: out.sort((a,b)=>b.createdAt-a.createdAt);
       }
-      return out;
-    }
-
-    // ===== Render =====
-    async function displayTasks() {
-      const ul = $("#tasks");
-      ul.innerHTML = `<li class="card"><em>Loading tasks…</em></li>`;
-
-      // My coordinates: geolocation wins, else try postcode
-      let myCoords = null;
-      if (myLocation) {
-        myCoords = myLocation;
-      } else {
-        const pc = normPostcode($("#myPostcode").value);
-        if (pc) myCoords = await geocodePostcode(pc);
-      }
-
-      // Geocode all unique task postcodes in parallel
-      const unique = [...new Set(tasks.map(t => normPostcode(t.postcode)))];
-      const coordsMap = {};
-      await Promise.all(unique.map(async pc => {
-        const loc = await geocodePostcode(pc);
-        if (loc) coordsMap[pc] = loc;
-      }));
-
-      const coordsByTaskId = {};
-      for (const t of tasks) {
-        const key = normPostcode(t.postcode);
-        if (coordsMap[key]) coordsByTaskId[t.id] = coordsMap[key];
-      }
-
-      const list = rankTasks(tasks, myCoords, coordsByTaskId);
-
-      ul.innerHTML = "";
-      if (!list.length) {
-        ul.innerHTML = `<li class="card"><em>No tasks yet, be the first to post</em></li>`;
-        return;
-      }
-
-      for (const t of list) {
-        const li = document.createElement("li");
-        li.className = "card";
+      // render
+      if(!out.length){ ul.innerHTML = `<li class="card task"><em>No tasks yet, be the first to post</em></li>`; return; }
+      ul.innerHTML='';
+      for(const t of out){
+        const distStr = isFinite(t._dist) ? `${t._dist.toFixed(1)} km away` : 'distance unknown';
+        const whenStr = t.when ? new Date(t.when).toLocaleString() : 'Flexible';
         const trustBadges = [];
-        if (t.poster?.verified) trustBadges.push(`<span class="badge">ID verified</span>`);
-        if (t.poster?.neighbourVerified) trustBadges.push(`<span class="badge">Neighbour verified</span>`);
-        if (t.preferVerified) trustBadges.push(`<span class="badge">Prefers verified</span>`);
-        const whenStr = t.when ? new Date(t.when).toLocaleString() : "Flexible";
-        const priceStr = Number.isFinite(t.price) ? `£${t.price}` : "Offer";
-        const distStr = isFinite(t._dist) ? `${t._dist.toFixed(1)} km away` : "distance unknown";
-
+        if(t.poster?.verified) trustBadges.push('<span class="badge">Uni verified</span>');
+        if(t.poster?.neighbourVerified) trustBadges.push('<span class="badge">Neighbour verified</span>');
+        if(t.preferVerified) trustBadges.push('<span class="badge">Prefers verified</span>');
+        const li = document.createElement('li'); li.className='card task';
         li.innerHTML = `
-          <div class="title">${escapeHtml(t.title)}</div>
-          <div>${escapeHtml(t.description)}</div>
-          <div class="meta">
-            <span class="badge">${t.category || "General"}</span>
-            <span>Postcode: ${t.postcode}</span>
-            <span>${distStr}</span>
-            <span>When: ${whenStr}</span>
-            <span class="price">${priceStr}</span>
-            ${trustBadges.join(" ")}
+          <div class="row" style="justify-content:space-between">
+            <div style="font-weight:800">${escapeHtml(t.title)}</div>
+            <div class="price">£${Number.isFinite(t.price)? t.price: '—'}</div>
           </div>
-          <div class="actions">
-            <button data-id="${t.id}" class="accept">I can help</button>
-            <button data-id="${t.id}" class="share">Share</button>
-            <button data-id="${t.id}" class="done">Mark complete</button>
+          <div class="muted">${escapeHtml(t.description)}</div>
+          <div class="row" style="margin-top:6px">
+            <span class="badge">${t.category||'General'}</span>
+            <span class="muted">${t.postcode}</span>
+            <span class="muted">${distStr}</span>
+            <span class="muted">When: ${whenStr}</span>
+            ${trustBadges.join(' ')}
           </div>
-        `;
+          <div class="row" style="margin-top:8px">
+            <button class="btn" data-id="${t.id}" data-act="accept">I can help</button>
+            <button class="btn secondary" data-id="${t.id}" data-act="share">Share</button>
+            <button class="btn secondary" data-id="${t.id}" data-act="done">Mark complete</button>
+          </div>`;
         ul.appendChild(li);
       }
-
-      $all(".accept").forEach(b => b.onclick = () => acceptTask(b.dataset.id));
-      $all(".share").forEach(b => b.onclick = () => shareTask(b.dataset.id));
-      $all(".done").forEach(b => b.onclick = () => completeTask(b.dataset.id));
+      // actions
+      $('#tasks').onclick = (e)=>{
+        const btn = e.target.closest('button'); if(!btn) return; const id = btn.dataset.id; const act = btn.dataset.act; const t = tasks.find(x=>x.id===id); if(!t) return; 
+        if(act==='accept'){ toast('In MVP this would open chat / request flow'); }
+        if(act==='share'){ const text = `AnyHelp? • ${t.title} (${t.postcode}) – ${t.description}`; if(navigator.share) navigator.share({title:'AnyHelp?',text}); else { navigator.clipboard.writeText(text); toast('Task copied'); } }
+        if(act==='done'){ const code = prompt('Enter the 4-digit handover code to complete'); if(!code || !/^\d{4}$/.test(code)) return toast('Invalid code'); t.status='done'; saveTasks(); displayTasks(); toast('Completed'); }
+      }
     }
 
-    // ===== Actions =====
-    function acceptTask(id) { alert("In the MVP, this will open a chat or request flow. For now we will just highlight your interest."); }
-    function shareTask(id) {
-      const t = tasks.find(x => x.id === id);
-      const text = `AnyHelp? • ${t.title} (${t.postcode}) – ${t.description}`;
-      if (navigator.share) navigator.share({ title: "AnyHelp?", text });
-      else { navigator.clipboard.writeText(text); alert("Task copied to clipboard"); }
-    }
-    function completeTask(id) {
-      const code = prompt("Enter the 4-digit handover code to complete");
-      if (!code) return;
-      const t = tasks.find(x => x.id === id);
-      if (!t) return;
-      if (!/^\d{4}$/.test(code)) return alert("Invalid code");
-      t.status = "done";
-      saveTasks();
-      displayTasks();
-    }
-
-    // ===== Geolocation =====
-    $("#locateBtn").addEventListener("click", () => {
-      if (!navigator.geolocation) return alert("Geolocation not available");
-      navigator.geolocation.getCurrentPosition(
-        pos => { myLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude }; displayTasks(); },
-        () => alert("Could not get your location")
-      );
+    // ========= Geolocation =========
+    $('#locateBtn')?.addEventListener('click',()=>{
+      if(!navigator.geolocation) return toast('Geolocation not available');
+      navigator.geolocation.getCurrentPosition(pos=>{ myLocation = {lat:pos.coords.latitude, lon:pos.coords.longitude}; displayTasks(); toast('Location set'); }, ()=>toast('Could not get your location'));
     });
 
-    // ===== Events =====
-    $("#postBtn").addEventListener("click", postTask);
-    ["#q","#filterCategory","#sortBy","#myPostcode"].forEach(sel => { $(sel).addEventListener("input", displayTasks); });
+    // ========= Stats (fake counters for social proof) =========
+    function bumpStats(){ const a = Number(localStorage.getItem('ah.stat.completed')||'0')+1; localStorage.setItem('ah.stat.completed', a); renderStats(); }
+    function renderStats(){ $('#stat-users').textContent = String(Math.max(12, (localStorage.getItem('ah.stat.users')||25))); $('#stat-completed').textContent = String(localStorage.getItem('ah.stat.completed')||0); }
 
-    document.addEventListener("DOMContentLoaded", () => { updateGeoStatus(); displayTasks(); });
+    // ========= Profile =========
+    function loadProfileUI(){ $('#p_name').value = profile.name||''; $('#p_email').value = profile.email||''; $('#p_uni_verified').checked = !!profile.uni_verified; $('#p_skills').value = profile.skills||''; $('#p_pc').value = profile.pc||''; $('#p_avail').value = profile.avail||''; }
+    function saveProfileUI(){ profile = { name:$('#p_name').value.trim(), email:$('#p_email').value.trim(), uni_verified:$('#p_uni_verified').checked, skills:$('#p_skills').value.trim(), pc:$('#p_pc').value.trim(), avail:$('#p_avail').value.trim() }; saveProfile(); toast('Profile saved'); }
+
+    $('#save_profile')?.addEventListener('click', saveProfileUI);
+    $('#clear_profile')?.addEventListener('click', ()=>{ profile = {}; saveProfile(); loadProfileUI(); toast('Profile cleared'); });
+
+    // Verify demo
+    $('#v_send')?.addEventListener('click', ()=>toast('Verification email would be sent (demo)'));
+    $('#v_mark')?.addEventListener('click', ()=>{ profile.uni_verified = true; saveProfile(); loadProfileUI(); toast('Marked verified (demo)'); });
+
+    // ========= Router =========
+    const pages = {
+      home: '#page-home', tasks: '#page-tasks', profile: '#page-profile', about: '#page-about', verify: '#page-verify'
+    };
+    function setActiveNav(route){ ['home','tasks','profile','about'].forEach(r=>{ const a = document.querySelector(`#nav-${r}`); if(a) a.classList.toggle('active', r===route); }); }
+    function show(route){ Object.values(pages).forEach(sel=>{ const el = document.querySelector(sel); if(el) el.classList.remove('active'); }); const el = document.querySelector(pages[route]||pages.home); if(el) el.classList.add('active'); setActiveNav(route); if(route==='tasks') displayTasks(); if(route==='profile') loadProfileUI(); }
+    function router(){ const hash = location.hash.replace('#/',''); const route = hash in pages ? hash : 'home'; show(route); }
+    window.addEventListener('hashchange', router);
+
+    // Bind buttons
+    $('#postBtn')?.addEventListener('click', postTask);
+    $('#hero-post')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').focus(), 50); });
+    $('#btn-post-cta')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').scrollIntoView({behavior:'smooth'}), 50); });
+
+    // Filters events
+    ['#q','#filterCategory','#sortBy','#myPostcode'].forEach(sel=>{ const el = document.querySelector(sel); if(el) el.addEventListener('input', displayTasks); });
+
+    // Init
+    document.addEventListener('DOMContentLoaded', ()=>{ updateGeoStatus(); renderStats(); router(); displayTasks(); });
   </script>
 </body>
 </html>
+
+
