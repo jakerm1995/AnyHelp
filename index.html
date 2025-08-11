@@ -14,11 +14,10 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);background:
-      linear-gradient(180deg,rgba(10,122,255,.15),rgba(10,122,255,0)) ,
-      radial-gradient(1200px 450px at 20% -20%, #eaf2ff66, transparent),
-      url('https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2000&auto=format&fit=crop');
-      background-attachment: fixed; background-size: cover; background-position: center;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);
+      /* keep the subtle gradient; move photography into hero collage for control & performance */
+      background: linear-gradient(180deg,rgba(10,122,255,.12),rgba(10,122,255,0)), radial-gradient(1000px 400px at 10% -10%, #eaf2ff66, transparent);
+    }
 
     /* App shell */
     header.app{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--brand),#3b82f6);color:#fff}
@@ -35,8 +34,7 @@
     main{max-width:1100px;margin:0 auto;padding:18px}
 
     /* Hero */
-    .hero{margin-top:18px;background:radial-gradient(1200px 450px at 20% -20%,#eaf2ff,transparent),
-                     linear-gradient(180deg,#ffffff, #f7faff);border-radius:20px;padding:28px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.15fr .85fr;gap:24px}
+    .hero{margin-top:18px;background:linear-gradient(180deg,#ffffff, #f7faff);border-radius:20px;padding:28px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.15fr .85fr;gap:24px;overflow:hidden}
     .hero h1{margin:0 0 8px 0;font-size:clamp(26px,4vw,36px)}
     .hero p{margin:0 0 18px 0;color:var(--muted)}
     .hero .cta{display:flex;gap:10px;flex-wrap:wrap}
@@ -87,6 +85,12 @@
     .kv label{color:var(--muted);font-size:14px}
 
     .hr{height:1px;background:#e8ecf5;margin:16px 0}
+    .hero-collage{position:relative;min-height:320px}
+    .hero-collage .shot{position:absolute;background-size:cover;background-position:center;border-radius:22px;box-shadow:var(--shadow)}
+    .hero-collage .shot.a{inset:0 28% 28% 0;background-image:url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1600&auto=format&fit=crop');}
+    .hero-collage .shot.b{inset:38% 0 0 38%;background-image:url('https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1600&auto=format&fit=crop');}
+    @media (max-width:860px){ .hero-collage{display:none} }
+
   </style>
 </head>
 <body>
@@ -142,6 +146,11 @@
         </div>
         <p class="muted" style="margin-top:10px">Never post sensitive info. Meet in public for first jobs. Use handover codes on item lending.</p>
       </div>
+      <!-- Collage on the right: two high-res images with masks; swap URLs below -->
+      <aside class="hero-collage">
+        <div class="shot a" role="img" aria-label="Neighbours carrying boxes"></div>
+        <div class="shot b" role="img" aria-label="Student walking dogs"></div>
+      </aside>
     </section>
 
     <!-- TASKS PAGE -->
@@ -212,7 +221,7 @@
     <!-- ABOUT PAGE -->
     <section class="card section page" id="page-about">
       <h2 class="subtitle">About AnyHelp</h2>
-      <p>AnyHelp connects neighbours for tiny, everyday tasks e.g., to carry a sofa, walking dogs, for pet sitting, to borrow a drill, quick tech setup—matched in minutes, not days. We start in dense student and city areas so you can find help fast. Safety and simplicity are the core: transparent pricing, optional verification badges, and handover codes for item lending.</p>
+      <p>AnyHelp connects neighbours for tiny, everyday tasks—carry a sofa, borrow a drill, quick tech setup—matched in minutes, not days. We start in dense student and city areas so you can find help fast. Safety and simplicity are the core: transparent pricing, optional verification badges, and handover codes for item lending.</p>
       <div class="grid-3" style="margin-top:12px">
         <div class="card section">
           <h3 class="subtitle">How it works</h3>
@@ -257,7 +266,7 @@
       <p class="muted" style="margin-top:10px">In production, this would send an email with a sign-in link. For now, the demo button toggles your badge locally.</p>
     </section>
 
-    <div class="footer">© AnyHelp? – Community powered • Please use this service safely and responsibly • Get verified for better matches</div>
+    <div class="footer">© AnyHelp? – Community powered • Use at your own risk • Get verified for better matches</div>
   </main>
 
   <div class="toast" id="toast"></div>
@@ -311,7 +320,7 @@
       const preferVerified = $('#needsVerified').checked;
       if(!title || !description || !postcode){ toast('Please fill title, description & postcode'); return; }
       if(Number.isNaN(price) || price < 0){ toast('Enter a valid price (≥ £0)'); return; }
-      const t = { id:uid(), title, description, category, postcode, price, when, preferVerified, createdAt:Date.now(), status:'open', poster:{ name: profile.name||'Neighbour', verified: !!profile.uni_verified, neighbourVerified:false } };
+      const t = { id:uid(), title, description, category, postcode, price, when, preferVerified, createdAt:Date.now(), status:'open', poster: { name: (profile.p_name || 'Neighbour'), verified: !!profile.h_uni_verified, neighbourVerified:false } };
       tasks.unshift(t); saveTasks(); displayTasks(); clearPostForm(); toast('Task posted'); location.hash = '#/tasks';
       // Update fake stats
       bumpStats();
@@ -438,7 +447,7 @@
 
     // Verify demo
     $('#v_send')?.addEventListener('click', ()=>toast('Verification email would be sent (demo)'));
-    $('#v_mark')?.addEventListener('click', ()=>{ profile.uni_verified = true; saveProfile(); loadProfileUI(); toast('Marked verified (demo)'); });
+    $('#v_mark')?.addEventListener('click', ()=>{ profile.h_uni_verified = true; saveProfile(); loadProfileUI(); toast('Marked verified (demo)'); });
 
     // ========= Router =========
     const pages = {
@@ -462,7 +471,5 @@
   </script>
 </body>
 </html>
-
-
 
 
