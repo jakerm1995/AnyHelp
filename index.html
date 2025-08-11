@@ -452,5 +452,29 @@
     $('#v_send')?.addEventListener('click', ()=>toast('Verification email would be sent (demo)'));
     $('#v_mark')?.addEventListener('click', ()=>{ profile.h_uni_verified = true; saveProfile(); loadProfileUI(); toast('Marked verified (demo)'); });
 
+    // ========= Router =========
+    const pages = { home:'#page-home', tasks:'#page-tasks', profile:'#page-profile', about:'#page-about', verify:'#page-verify' };
+    function setActiveNav(route){ ['home','tasks','profile','about'].forEach(r=>{ const a = document.querySelector(`#nav-${r}`); if(a) a.classList.toggle('active', r===route); }); }
+    function show(route){
+      Object.values(pages).forEach(sel=>{ const el = document.querySelector(sel); if(el) el.classList.remove('active'); });
+      const el = document.querySelector(pages[route]||pages.home); if(el) el.classList.add('active');
+      setActiveNav(route);
+      if(route==='tasks') displayTasks();
+      if(route==='profile') loadProfileUI();
+    }
+    function router(){ const hash = location.hash.replace('#/',''); const route = hash in pages ? hash : 'home'; show(route); }
+    window.addEventListener('hashchange', router);
 
+    // Bind buttons
+    $('#postBtn')?.addEventListener('click', postTask);
+    $('#hero-post')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').focus(), 50); });
+    $('#btn-post-cta')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').scrollIntoView({behavior:'smooth'}), 50); });
 
+    // Filters events
+    ['#q','#filterCategory','#sortBy','#myPostcode'].forEach(sel=>{ const el = document.querySelector(sel); if(el) el.addEventListener('input', displayTasks); });
+
+    // Init
+    document.addEventListener('DOMContentLoaded', ()=>{ updateGeoStatus(); renderStats(); router(); displayTasks(); loadProfileUI(); });
+  </script>
+</body>
+</html>
