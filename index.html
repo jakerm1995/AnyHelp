@@ -14,7 +14,11 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f7faff 0%,#f6f7fb 60%)}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);background:
+      linear-gradient(180deg,rgba(10,122,255,.15),rgba(10,122,255,0)) ,
+      radial-gradient(1200px 450px at 20% -20%, #eaf2ff66, transparent),
+      url('https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2000&auto=format&fit=crop');
+      background-attachment: fixed; background-size: cover; background-position: center;}
 
     /* App shell */
     header.app{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--brand),#3b82f6);color:#fff}
@@ -40,7 +44,7 @@
     .stat{background:#fff;border:1px solid #eef1f7;border-radius:12px;padding:10px;text-align:center}
     .stat b{font-size:20px}
 
-    .card{background:var(--card);border:1px solid #eef1f7;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card{background:rgba(255,255,255,.88);backdrop-filter: blur(6px);border:1px solid #eef1f7;border-radius:var(--radius);box-shadow:var(--shadow)}
     .section{margin:18px 0;padding:18px}
 
     .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -61,6 +65,12 @@
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .badge{display:inline-flex;gap:6px;align-items:center;background:#eef6ff;color:#0b62d6;border-radius:999px;padding:3px 8px;font-size:12px}
     .price{font-weight:800}
+
+    /* Segmented control */
+    .seg{display:inline-flex;background:#eaf2ff;border:1px solid #cfe0ff;border-radius:999px;overflow:hidden}
+    .seg button{background:transparent;border:0;padding:8px 14px;color:#0b62d6;cursor:pointer}
+    .seg button.active{background:#fff;color:var(--brand);font-weight:800}
+
 
     .footer{color:var(--muted);text-align:center;padding:36px 8px}
 
@@ -165,26 +175,38 @@
     <!-- PROFILE PAGE -->
     <section class="card section page" id="page-profile">
       <h2 class="subtitle">Your Profile</h2>
-      <div class="kv">
-        <label>Name</label>
-        <input id="p_name" placeholder="e.g., Alex" />
-        <label>Email</label>
-        <input id="p_email" placeholder="name@uni.ac.uk" />
-        <label>University email verified</label>
-        <div class="row"><input type="checkbox" id="p_uni_verified"/> <span class="muted">Tick if you’ve verified a .ac.uk email</span></div>
-        <label>Skills (comma separated)</label>
-        <input id="p_skills" placeholder="lifting, drill, tech setup" />
-        <label>Home postcode</label>
-        <input id="p_pc" placeholder="SA1 6ET" />
-        <label>Availability</label>
-        <input id="p_avail" placeholder="Evenings and weekends"/>
+      <div class="row" style="margin-bottom:10px">
+        <div class="seg" id="role_seg">
+          <button type="button" data-role="poster" class="active">I hire helpers</button>
+          <button type="button" data-role="helper">I help neighbours</button>
+        </div>
       </div>
+
+      <!-- Poster form -->
+      <div id="poster_form" class="grid">
+        <input id="p_name" placeholder="Your name"/>
+        <input id="p_email" placeholder="email (for notifications)"/>
+        <input id="p_pc" placeholder="Home postcode (e.g., SA1 6ET)"/>
+        <input id="p_prefcats" placeholder="Preferred categories (comma separated)"/>
+        <textarea id="p_notes" class="grid-1" placeholder="Notes for helpers (e.g., buzzer instructions)"></textarea>
+      </div>
+
+      <!-- Helper form -->
+      <div id="helper_form" class="grid" style="display:none">
+        <input id="h_name" placeholder="Your name"/>
+        <input id="h_email" placeholder="email (for matches)"/>
+        <div class="row"><input type="checkbox" id="h_uni_verified"/> <span class="muted">University email verified</span></div>
+        <input id="h_skills" placeholder="Skills (lifting, drill, tech setup)"/>
+        <input id="h_rate" placeholder="Typical rate (£/hour or flat)"/>
+        <input id="h_avail" placeholder="Availability (e.g., evenings & weekends)"/>
+      </div>
+
       <div class="hr"></div>
       <div class="row">
         <button class="btn" id="save_profile">Save profile</button>
         <button class="btn secondary" id="clear_profile">Clear</button>
       </div>
-      <p class="muted" style="margin-top:8px">Your profile stays on your device for now (local-only). When you choose to get verified later, we’ll store minimal info securely.</p>
+      <p class="muted" style="margin-top:8px">Profiles are stored locally in this MVP. When we add verification and payments, you’ll be able to sync securely.</p>
     </section>
 
     <!-- ABOUT PAGE -->
@@ -369,11 +391,50 @@
     function renderStats(){ $('#stat-users').textContent = String(Math.max(12, (localStorage.getItem('ah.stat.users')||25))); $('#stat-completed').textContent = String(localStorage.getItem('ah.stat.completed')||0); }
 
     // ========= Profile =========
-    function loadProfileUI(){ $('#p_name').value = profile.name||''; $('#p_email').value = profile.email||''; $('#p_uni_verified').checked = !!profile.uni_verified; $('#p_skills').value = profile.skills||''; $('#p_pc').value = profile.pc||''; $('#p_avail').value = profile.avail||''; }
-    function saveProfileUI(){ profile = { name:$('#p_name').value.trim(), email:$('#p_email').value.trim(), uni_verified:$('#p_uni_verified').checked, skills:$('#p_skills').value.trim(), pc:$('#p_pc').value.trim(), avail:$('#p_avail').value.trim() }; saveProfile(); toast('Profile saved'); }
+    let currentRole = 'poster';
+    function setRoleUI(r){ currentRole = r; const pf = $('#poster_form'); const hf = $('#helper_form'); if(pf&&hf){ pf.style.display = r==='poster' ? '' : 'none'; hf.style.display = r==='helper' ? '' : 'none'; }
+      $$('#role_seg button').forEach(b=> b.classList.toggle('active', b.dataset.role===r)); }
+    function loadProfileUI(){
+      const r = profile.role||'poster';
+      setRoleUI(r);
+      // Poster fields
+      $('#p_name') && ($('#p_name').value = profile.p_name||'');
+      $('#p_email') && ($('#p_email').value = profile.p_email||'');
+      $('#p_pc') && ($('#p_pc').value = profile.p_pc||'');
+      $('#p_prefcats') && ($('#p_prefcats').value = profile.p_prefcats||'');
+      $('#p_notes') && ($('#p_notes').value = profile.p_notes||'');
+      // Helper fields
+      $('#h_name') && ($('#h_name').value = profile.h_name||'');
+      $('#h_email') && ($('#h_email').value = profile.h_email||'');
+      $('#h_uni_verified') && ($('#h_uni_verified').checked = !!profile.h_uni_verified);
+      $('#h_skills') && ($('#h_skills').value = profile.h_skills||'');
+      $('#h_rate') && ($('#h_rate').value = profile.h_rate||'');
+      $('#h_avail') && ($('#h_avail').value = profile.h_avail||'');
+    }
+    function saveProfileUI(){
+      const role = currentRole || 'poster';
+      profile.role = role;
+      // Poster
+      profile.p_name = $('#p_name')?.value.trim() || '';
+      profile.p_email = $('#p_email')?.value.trim() || '';
+      profile.p_pc = $('#p_pc')?.value.trim() || '';
+      profile.p_prefcats = $('#p_prefcats')?.value.trim() || '';
+      profile.p_notes = $('#p_notes')?.value.trim() || '';
+      // Helper
+      profile.h_name = $('#h_name')?.value.trim() || '';
+      profile.h_email = $('#h_email')?.value.trim() || '';
+      profile.h_uni_verified = $('#h_uni_verified')?.checked || false;
+      profile.h_skills = $('#h_skills')?.value.trim() || '';
+      profile.h_rate = $('#h_rate')?.value.trim() || '';
+      profile.h_avail = $('#h_avail')?.value.trim() || '';
+      saveProfile(); toast('Profile saved');
+    }
 
-    $('#save_profile')?.addEventListener('click', saveProfileUI);
-    $('#clear_profile')?.addEventListener('click', ()=>{ profile = {}; saveProfile(); loadProfileUI(); toast('Profile cleared'); });
+    // Role switcher
+    document.addEventListener('click', (e)=>{
+      const b = e.target.closest('#role_seg button');
+      if(!b) return; setRoleUI(b.dataset.role);
+    });
 
     // Verify demo
     $('#v_send')?.addEventListener('click', ()=>toast('Verification email would be sent (demo)'));
@@ -397,9 +458,11 @@
     ['#q','#filterCategory','#sortBy','#myPostcode'].forEach(sel=>{ const el = document.querySelector(sel); if(el) el.addEventListener('input', displayTasks); });
 
     // Init
-    document.addEventListener('DOMContentLoaded', ()=>{ updateGeoStatus(); renderStats(); router(); displayTasks(); });
+    document.addEventListener('DOMContentLoaded', ()=>{ updateGeoStatus(); renderStats(); router(); displayTasks(); loadProfileUI(); });
   </script>
 </body>
 </html>
+
+
 
 
