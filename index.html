@@ -14,9 +14,15 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);
-      /* keep the subtle gradient; move photography into hero collage for control & performance */
-      background: linear-gradient(180deg,rgba(10,122,255,.12),rgba(10,122,255,0)), radial-gradient(1000px 400px at 10% -10%, #eaf2ff66, transparent);
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      color:var(--ink);
+      /* Vibrant, relevant background (Unsplash license allows free commercial use) */
+      background:
+        linear-gradient(180deg,rgba(10,122,255,.12),rgba(10,122,255,0)),
+        radial-gradient(1000px 400px at 10% -10%, #eaf2ff66, transparent),
+        url('https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2000&auto=format&fit=crop') center/cover fixed;
     }
 
     /* App shell */
@@ -34,7 +40,12 @@
     main{max-width:1100px;margin:0 auto;padding:18px}
 
     /* Hero */
-    .hero{margin-top:18px;background:linear-gradient(180deg,#ffffff, #f7faff);border-radius:20px;padding:28px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.15fr .85fr;gap:24px;overflow:hidden}
+    .hero{
+      margin-top:18px;
+      background:linear-gradient(180deg,#ffffff, #f7faff);
+      border-radius:20px;padding:28px;box-shadow:var(--shadow);
+      display:grid;grid-template-columns:1.15fr .85fr;gap:24px;overflow:hidden
+    }
     .hero h1{margin:0 0 8px 0;font-size:clamp(26px,4vw,36px)}
     .hero p{margin:0 0 18px 0;color:var(--muted)}
     .hero .cta{display:flex;gap:10px;flex-wrap:wrap}
@@ -69,7 +80,6 @@
     .seg button{background:transparent;border:0;padding:8px 14px;color:#0b62d6;cursor:pointer}
     .seg button.active{background:#fff;color:var(--brand);font-weight:800}
 
-
     .footer{color:var(--muted);text-align:center;padding:36px 8px}
 
     /* Router pages (hidden by default) */
@@ -83,14 +93,19 @@
     /* Table for profile */
     .kv{display:grid;grid-template-columns:180px 1fr;gap:8px;align-items:center}
     .kv label{color:var(--muted);font-size:14px}
-
     .hr{height:1px;background:#e8ecf5;margin:16px 0}
-    .hero-collage{position:relative;min-height:320px}
-    .hero-collage .shot{position:absolute;background-size:cover;background-position:center;border-radius:22px;box-shadow:var(--shadow)}
-    .hero-collage .shot.a{inset:0 28% 28% 0;background-image:url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1600&auto=format&fit=crop');}
-    .hero-collage .shot.b{inset:38% 0 0 38%;background-image:url('https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1600&auto=format&fit=crop');}
-    @media (max-width:860px){ .hero-collage{display:none} }
 
+    /* Hero collage – single large dog image */
+    .hero-collage{position:relative;min-height:340px}
+    .hero-collage .shot{
+      position:absolute; inset:0;
+      background-size:cover;background-position:center;
+      border-radius:22px;box-shadow:var(--shadow)
+    }
+    .hero-collage .shot.main{
+      background-image:url('https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1600&auto=format&fit=crop');
+    }
+    @media (max-width:860px){ .hero-collage{display:none} }
   </style>
 </head>
 <body>
@@ -124,32 +139,10 @@
           <div class="stat"><b id="stat-eta">&lt;10m</b><div class="muted">typical match time</div></div>
         </div>
       </div>
-      <div class="card section">
-        <h3 class="subtitle">Post a Task</h3>
-        <div class="grid">
-          <input id="taskTitle" placeholder="Task title (e.g., Carry a sofa upstairs)"/>
-          <select id="taskCategory">
-            <option value="">Category</option>
-            <option>Moving and lifting</option>
-            <option>Repairs and DIY</option>
-            <option>Gardening</option>
-            <option>Errands</option>
-            <option>Tool lending</option>
-            <option>Pet help</option>
-          </select>
-          <textarea id="taskDescription" placeholder="Describe the task…" class="grid-1"></textarea>
-          <input id="taskPostcode" placeholder="Postcode, e.g., SA1 6ET"/>
-          <input type="number" id="taskPrice" placeholder="Offer £" min="0" step="1"/>
-          <input type="datetime-local" id="taskWhen"/>
-          <label class="row"><input type="checkbox" id="needsVerified"/> Prefer verified neighbours only</label>
-          <button id="postBtn" class="btn">Post Task</button>
-        </div>
-        <p class="muted" style="margin-top:10px">Never post sensitive info. Meet in public for first jobs. Use handover codes on item lending.</p>
-      </div>
-      <!-- Collage on the right: two high-res images with masks; swap URLs below -->
+
+      <!-- Single large image (dogs) -->
       <aside class="hero-collage">
-        <div class="shot a" role="img" aria-label="Neighbours carrying boxes"></div>
-        <div class="shot b" role="img" aria-label="Student walking dogs"></div>
+        <div class="shot main" role="img" aria-label="Student walking dogs in the neighbourhood"></div>
       </aside>
     </section>
 
@@ -266,7 +259,7 @@
       <p class="muted" style="margin-top:10px">In production, this would send an email with a sign-in link. For now, the demo button toggles your badge locally.</p>
     </section>
 
-    <div class="footer">© AnyHelp? – Community powered • Use at your own risk • Get verified for better matches</div>
+    <div class="footer">© AnyHelp? – Community powered • Please use this service safely and responsibly • Get verified for better matches</div>
   </main>
 
   <div class="toast" id="toast"></div>
@@ -320,9 +313,12 @@
       const preferVerified = $('#needsVerified').checked;
       if(!title || !description || !postcode){ toast('Please fill title, description & postcode'); return; }
       if(Number.isNaN(price) || price < 0){ toast('Enter a valid price (≥ £0)'); return; }
-      const t = { id:uid(), title, description, category, postcode, price, when, preferVerified, createdAt:Date.now(), status:'open', poster: { name: (profile.p_name || 'Neighbour'), verified: !!profile.h_uni_verified, neighbourVerified:false } };
+      const t = {
+        id:uid(), title, description, category, postcode, price, when, preferVerified,
+        createdAt:Date.now(), status:'open',
+        poster:{ name: (profile.p_name || 'Neighbour'), verified: !!profile.h_uni_verified, neighbourVerified:false }
+      };
       tasks.unshift(t); saveTasks(); displayTasks(); clearPostForm(); toast('Task posted'); location.hash = '#/tasks';
-      // Update fake stats
       bumpStats();
     }
     function clearPostForm(){ ['#taskTitle','#taskDescription','#taskCategory','#taskPostcode','#taskPrice','#taskWhen'].forEach(sel=>{ const el=$(sel); if(!el) return; if(el.tagName==='SELECT') el.value=''; else el.value=''; }); $('#needsVerified').checked=false; }
@@ -334,12 +330,14 @@
     let myLocation = null; // {lat,lon}
     async function displayTasks(){
       const ul = $('#tasks'); if(!ul) return; ul.innerHTML = `<li class="card task"><em>Loading…</em></li>`;
-      // my coords
       let my = null; if(myLocation) my = myLocation; else { const pc = normPC($('#myPostcode')?.value); if(pc) my = await geocodePostcode(pc); }
-      // geocode unique task postcodes
-      const uniq = [...new Set(tasks.map(t=>normPC(t.postcode)))]; const coords = {}; await Promise.all(uniq.map(async pc=>{ const loc = await geocodePostcode(pc); if(loc) coords[pc]=loc; }));
-      const items = tasks.filter(t=>t.status==='open').map(t=>{ const there = coords[normPC(t.postcode)] || null; const dist = my && there ? distanceKm(my,there) : Infinity; return {...t, _dist:dist, _trust:trustScore(t)} });
-      // filters
+      const uniq = [...new Set(tasks.map(t=>normPC(t.postcode)))];
+      const coords = {}; await Promise.all(uniq.map(async pc=>{ const loc = await geocodePostcode(pc); if(loc) coords[pc]=loc; }));
+      const items = tasks.filter(t=>t.status==='open').map(t=>{
+        const there = coords[normPC(t.postcode)] || null;
+        const dist = my && there ? distanceKm(my,there) : Infinity;
+        return {...t, _dist:dist, _trust:trustScore(t)}
+      });
       const q = ($('#q')?.value||'').trim().toLowerCase(); const cat = $('#filterCategory')?.value||''; const sortBy = $('#sortBy')?.value||'recent';
       let out = items; if(q) out = out.filter(t=> (t.title+" "+t.description).toLowerCase().includes(q)); if(cat) out = out.filter(t=> t.category===cat);
       switch(sortBy){
@@ -349,7 +347,6 @@
         case 'trust': out.sort((a,b)=> (b._trust-a._trust) || (a._dist-b._dist)); break;
         default: out.sort((a,b)=>b.createdAt-a.createdAt);
       }
-      // render
       if(!out.length){ ul.innerHTML = `<li class="card task"><em>No tasks yet, be the first to post</em></li>`; return; }
       ul.innerHTML='';
       for(const t of out){
@@ -380,19 +377,21 @@
           </div>`;
         ul.appendChild(li);
       }
-      // actions
       $('#tasks').onclick = (e)=>{
-        const btn = e.target.closest('button'); if(!btn) return; const id = btn.dataset.id; const act = btn.dataset.act; const t = tasks.find(x=>x.id===id); if(!t) return; 
+        const btn = e.target.closest('button'); if(!btn) return; const id = btn.dataset.id; const act = btn.dataset.act; const t = tasks.find(x=>x.id===id); if(!t) return;
         if(act==='accept'){ toast('In MVP this would open chat / request flow'); }
         if(act==='share'){ const text = `AnyHelp? • ${t.title} (${t.postcode}) – ${t.description}`; if(navigator.share) navigator.share({title:'AnyHelp?',text}); else { navigator.clipboard.writeText(text); toast('Task copied'); } }
-        if(act==='done'){ const code = prompt('Enter the 4-digit handover code to complete'); if(!code || !/^\d{4}$/.test(code)) return toast('Invalid code'); t.status='done'; saveTasks(); displayTasks(); toast('Completed'); }
+        if(act==='done'){ const code = prompt('Enter the 4-digit handover code to complete'); if(!code || !/^\\d{4}$/.test(code)) return toast('Invalid code'); t.status='done'; saveTasks(); displayTasks(); toast('Completed'); }
       }
     }
 
     // ========= Geolocation =========
     $('#locateBtn')?.addEventListener('click',()=>{
       if(!navigator.geolocation) return toast('Geolocation not available');
-      navigator.geolocation.getCurrentPosition(pos=>{ myLocation = {lat:pos.coords.latitude, lon:pos.coords.longitude}; displayTasks(); toast('Location set'); }, ()=>toast('Could not get your location'));
+      navigator.geolocation.getCurrentPosition(
+        pos=>{ myLocation = {lat:pos.coords.latitude, lon:pos.coords.longitude}; displayTasks(); toast('Location set'); },
+        ()=>toast('Could not get your location')
+      );
     });
 
     // ========= Stats (fake counters for social proof) =========
@@ -401,8 +400,12 @@
 
     // ========= Profile =========
     let currentRole = 'poster';
-    function setRoleUI(r){ currentRole = r; const pf = $('#poster_form'); const hf = $('#helper_form'); if(pf&&hf){ pf.style.display = r==='poster' ? '' : 'none'; hf.style.display = r==='helper' ? '' : 'none'; }
-      $$('#role_seg button').forEach(b=> b.classList.toggle('active', b.dataset.role===r)); }
+    function setRoleUI(r){
+      currentRole = r;
+      const pf = $('#poster_form'); const hf = $('#helper_form');
+      if(pf&&hf){ pf.style.display = r==='poster' ? '' : 'none'; hf.style.display = r==='helper' ? '' : 'none'; }
+      $$('#role_seg button').forEach(b=> b.classList.toggle('active', b.dataset.role===r));
+    }
     function loadProfileUI(){
       const r = profile.role||'poster';
       setRoleUI(r);
@@ -449,27 +452,5 @@
     $('#v_send')?.addEventListener('click', ()=>toast('Verification email would be sent (demo)'));
     $('#v_mark')?.addEventListener('click', ()=>{ profile.h_uni_verified = true; saveProfile(); loadProfileUI(); toast('Marked verified (demo)'); });
 
-    // ========= Router =========
-    const pages = {
-      home: '#page-home', tasks: '#page-tasks', profile: '#page-profile', about: '#page-about', verify: '#page-verify'
-    };
-    function setActiveNav(route){ ['home','tasks','profile','about'].forEach(r=>{ const a = document.querySelector(`#nav-${r}`); if(a) a.classList.toggle('active', r===route); }); }
-    function show(route){ Object.values(pages).forEach(sel=>{ const el = document.querySelector(sel); if(el) el.classList.remove('active'); }); const el = document.querySelector(pages[route]||pages.home); if(el) el.classList.add('active'); setActiveNav(route); if(route==='tasks') displayTasks(); if(route==='profile') loadProfileUI(); }
-    function router(){ const hash = location.hash.replace('#/',''); const route = hash in pages ? hash : 'home'; show(route); }
-    window.addEventListener('hashchange', router);
-
-    // Bind buttons
-    $('#postBtn')?.addEventListener('click', postTask);
-    $('#hero-post')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').focus(), 50); });
-    $('#btn-post-cta')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').scrollIntoView({behavior:'smooth'}), 50); });
-
-    // Filters events
-    ['#q','#filterCategory','#sortBy','#myPostcode'].forEach(sel=>{ const el = document.querySelector(sel); if(el) el.addEventListener('input', displayTasks); });
-
-    // Init
-    document.addEventListener('DOMContentLoaded', ()=>{ updateGeoStatus(); renderStats(); router(); displayTasks(); loadProfileUI(); });
-  </script>
-</body>
-</html>
 
 
