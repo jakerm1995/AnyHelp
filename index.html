@@ -8,25 +8,42 @@
   <link rel="preconnect" href="https://api.mapbox.com" />
   <style>
     :root{
-      --brand:#0a7aff; --brand-2:#6aa9ff; --ink:#0f172a; --muted:#64748b; --bg:#f6f7fb; --card:#ffffff; --ok:#16a34a; --warn:#d97706; --danger:#ef4444;
+      --brand:#0a7aff; --brand-2:#6aa9ff;
+      --ink:#0f172a; --muted:#64748b; --bg:#f6f7fb; --card:#ffffff;
+      --ok:#16a34a; --warn:#d97706; --danger:#ef4444;
       --shadow:0 10px 25px rgba(17,24,39,.06),0 2px 6px rgba(17,24,39,.05);
       --radius:14px;
     }
+    /* Dark theme variables (override via [data-theme="dark"]) */
+    body[data-theme="dark"]{
+      --ink:#e5ecff; --muted:#93a1bd; --bg:#0b1220; --card:rgba(17,24,39,.78);
+      --brand:#5ea1ff; --brand-2:#98c1ff;
+    }
+
     *{box-sizing:border-box}
     html,body{height:100%}
+
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
       color:var(--ink);
       /* Vibrant, relevant background (Unsplash license allows free commercial use) */
       background:
-        linear-gradient(180deg,rgba(10,122,255,.12),rgba(10,122,255,0)),
-        radial-gradient(1000px 400px at 10% -10%, #eaf2ff66, transparent),
-        url('https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2000&auto=format&fit=crop') center/cover fixed;
+        linear-gradient(180deg,rgba(10,122,255,.10),rgba(10,122,255,0)),
+        radial-gradient(900px 360px at 12% -10%, #eaf2ff66, transparent),
+        url('https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2200&auto=format&fit=crop') center/cover fixed;
+    }
+    body[data-theme="dark"]{
+      background:
+        linear-gradient(180deg,rgba(10,122,255,.05),rgba(10,122,255,0)),
+        radial-gradient(900px 360px at 12% -10%, rgba(94,161,255,.18), transparent),
+        url('https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2200&auto=format&fit=crop') center/cover fixed;
+      backdrop-filter:saturate(110%);
     }
 
     /* App shell */
     header.app{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--brand),#3b82f6);color:#fff}
+    body[data-theme="dark"] header.app{background:linear-gradient(90deg,#1f3b7a,#2c4fa9)}
     .nav{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 16px}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}
     .logo i{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:#fff1;border:1px solid #ffffff33}
@@ -36,24 +53,29 @@
     .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
     .btn.secondary{background:#fff;color:var(--brand)}
     .btn.ghost{background:transparent;color:#fff;border:1px solid #ffffff55;box-shadow:none}
+    body[data-theme="dark"] .btn.secondary{background:#e6eeff;color:#0b2a6b}
 
     main{max-width:1100px;margin:0 auto;padding:18px}
 
     /* Hero */
     .hero{
+      position:relative;
       margin-top:18px;
-      background:linear-gradient(180deg,#ffffff, #f7faff);
+      background:linear-gradient(180deg,var(--card), #f7faff);
       border-radius:20px;padding:28px;box-shadow:var(--shadow);
       display:grid;grid-template-columns:1.15fr .85fr;gap:24px;overflow:hidden
     }
+    body[data-theme="dark"] .hero{background:linear-gradient(180deg,var(--card), #0f172a)}
     .hero h1{margin:0 0 8px 0;font-size:clamp(26px,4vw,36px)}
     .hero p{margin:0 0 18px 0;color:var(--muted)}
     .hero .cta{display:flex;gap:10px;flex-wrap:wrap}
     .statgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
-    .stat{background:#fff;border:1px solid #eef1f7;border-radius:12px;padding:10px;text-align:center}
+    .stat{background:rgba(255,255,255,.92);border:1px solid #eef1f7;border-radius:12px;padding:10px;text-align:center}
+    body[data-theme="dark"] .stat{background:rgba(17,24,39,.7);border-color:#1f2a44}
     .stat b{font-size:20px}
 
     .card{background:rgba(255,255,255,.88);backdrop-filter: blur(6px);border:1px solid #eef1f7;border-radius:var(--radius);box-shadow:var(--shadow)}
+    body[data-theme="dark"] .card{background:var(--card);border-color:#1f2a44}
     .section{margin:18px 0;padding:18px}
 
     .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -74,11 +96,15 @@
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .badge{display:inline-flex;gap:6px;align-items:center;background:#eef6ff;color:#0b62d6;border-radius:999px;padding:3px 8px;font-size:12px}
     .price{font-weight:800}
+    body[data-theme="dark"] .badge{background:#17325f;color:#a9c7ff}
 
     /* Segmented control */
     .seg{display:inline-flex;background:#eaf2ff;border:1px solid #cfe0ff;border-radius:999px;overflow:hidden}
     .seg button{background:transparent;border:0;padding:8px 14px;color:#0b62d6;cursor:pointer}
     .seg button.active{background:#fff;color:var(--brand);font-weight:800}
+    body[data-theme="dark"] .seg{background:#0e2a57;border-color:#254a8a}
+    body[data-theme="dark"] .seg button{color:#cfe0ff}
+    body[data-theme="dark"] .seg button.active{background:#17325f}
 
     .footer{color:var(--muted);text-align:center;padding:36px 8px}
 
@@ -90,22 +116,31 @@
     .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s}
     .toast.show{opacity:1}
 
-    /* Table for profile */
-    .kv{display:grid;grid-template-columns:180px 1fr;gap:8px;align-items:center}
-    .kv label{color:var(--muted);font-size:14px}
-    .hr{height:1px;background:#e8ecf5;margin:16px 0}
-
-    /* Hero collage – single large dog image */
-    .hero-collage{position:relative;min-height:340px}
-    .hero-collage .shot{
-      position:absolute; inset:0;
-      background-size:cover;background-position:center;
-      border-radius:22px;box-shadow:var(--shadow)
-    }
-    .hero-collage .shot.main{
+    /* Hero media – single, tasteful image (dog), scaled down */
+    .hero-media{position:relative;min-height:320px}
+    .hero-media .photo{
+      position:absolute; right:0; top:8px; bottom:8px; width:min(420px, 42vw);
       background-image:url('https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1600&auto=format&fit=crop');
+      background-size:cover;background-position:center;
+      border-radius:22px;box-shadow:var(--shadow); overflow:hidden;
+      transform:translateX(8px);
     }
-    @media (max-width:860px){ .hero-collage{display:none} }
+    /* subtle dark overlay for readability in both themes */
+    .hero-media .photo::after{
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.12));
+      pointer-events:none;
+    }
+    /* let hero text overlap the image slightly for a modern look */
+    .hero .hero-copy{position:relative; z-index:2}
+    .hero .hero-copy .overlap-pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px; background:#eef6ff; color:#0b62d6; font-weight:700; font-size:13px;
+      box-shadow:var(--shadow); transform:translateY(4px);
+    }
+    body[data-theme="dark"] .hero .hero-copy .overlap-pill{background:#17325f;color:#a9c7ff}
+
+    @media (max-width:860px){ .hero-media{display:none} }
   </style>
 </head>
 <body>
@@ -119,6 +154,7 @@
       <div class="nav-right">
         <button class="btn secondary" id="btn-post-cta">Post a task</button>
         <a class="btn ghost" href="#/verify">Get verified</a>
+        <button class="btn ghost" id="themeToggle" aria-pressed="false" title="Toggle dark mode">🌙</button>
       </div>
     </nav>
   </header>
@@ -126,7 +162,8 @@
   <main>
     <!-- HERO -->
     <section class="hero card page active" id="page-home">
-      <div>
+      <div class="hero-copy">
+        <span class="overlap-pill">⚡ Help in minutes</span>
         <h1>Real neighbours, real help, right now</h1>
         <p class="muted">Post a quick task or borrow a tool and get matched with someone nearby in minutes. Start with small, pre-priced jobs that fit student life and city living.</p>
         <div class="cta">
@@ -140,9 +177,9 @@
         </div>
       </div>
 
-      <!-- Single large image (dogs) -->
-      <aside class="hero-collage">
-        <div class="shot main" role="img" aria-label="Student walking dogs in the neighbourhood"></div>
+      <!-- Single tasteful image (dogs), scaled and aligned -->
+      <aside class="hero-media" aria-hidden="true">
+        <div class="photo" role="img" aria-label="Student walking dogs in the neighbourhood"></div>
       </aside>
     </section>
 
@@ -275,6 +312,7 @@
     const LS_TASKS = 'anyhelp.tasks.v2';
     const LS_GEO = 'anyhelp.geo.v2';
     const LS_PROFILE = 'anyhelp.profile.v1';
+    const THEME_KEY = 'ah.theme';
 
     const toastEl = $('#toast');
     function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 1800); }
@@ -295,6 +333,19 @@
     function saveProfile(){ localStorage.setItem(LS_PROFILE, JSON.stringify(profile)); }
 
     function updateGeoStatus(){ const n = Object.keys(GEO_CACHE).length; const el = $('#geoStatus'); if(el) el.textContent = `Geocoding cache: ${n} postcodes`; }
+
+    // ========= Theme (Dark/Light) =========
+    function setTheme(t){
+      document.body.dataset.theme = t;
+      localStorage.setItem(THEME_KEY, t);
+      const btn = $('#themeToggle');
+      if(btn){ btn.setAttribute('aria-pressed', t==='dark' ? 'true' : 'false'); btn.textContent = (t==='dark' ? '☀️' : '🌙'); }
+    }
+    function initTheme(){
+      const stored = localStorage.getItem(THEME_KEY);
+      const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      setTheme(stored || prefers);
+    }
 
     // ========= Mapbox Geocoding =========
     async function geocodePostcode(pc){ const key = normPC(pc); if(!key) return null; if(GEO_CACHE[key]) return GEO_CACHE[key];
@@ -452,6 +503,12 @@
     $('#v_send')?.addEventListener('click', ()=>toast('Verification email would be sent (demo)'));
     $('#v_mark')?.addEventListener('click', ()=>{ profile.h_uni_verified = true; saveProfile(); loadProfileUI(); toast('Marked verified (demo)'); });
 
+    // ========= Theme toggle =========
+    $('#themeToggle')?.addEventListener('click', ()=>{
+      const next = (document.body.dataset.theme === 'dark') ? 'light' : 'dark';
+      setTheme(next);
+    });
+
     // ========= Router =========
     const pages = { home:'#page-home', tasks:'#page-tasks', profile:'#page-profile', about:'#page-about', verify:'#page-verify' };
     function setActiveNav(route){ ['home','tasks','profile','about'].forEach(r=>{ const a = document.querySelector(`#nav-${r}`); if(a) a.classList.toggle('active', r===route); }); }
@@ -474,7 +531,14 @@
     ['#q','#filterCategory','#sortBy','#myPostcode'].forEach(sel=>{ const el = document.querySelector(sel); if(el) el.addEventListener('input', displayTasks); });
 
     // Init
-    document.addEventListener('DOMContentLoaded', ()=>{ updateGeoStatus(); renderStats(); router(); displayTasks(); loadProfileUI(); });
+    document.addEventListener('DOMContentLoaded', ()=>{
+      initTheme();
+      updateGeoStatus();
+      renderStats();
+      router();
+      displayTasks();
+      loadProfileUI();
+    });
   </script>
 </body>
 </html>
