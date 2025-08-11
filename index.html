@@ -27,7 +27,7 @@
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
       color:var(--ink);
-      /* Relevant background: moving/boxes (Unsplash, free commercial use) */
+      /* TEMP background (we'll swap later to your preferred one) */
       background:
         linear-gradient(180deg,rgba(10,122,255,.10),rgba(10,122,255,0)),
         radial-gradient(900px 360px at 12% -10%, #eaf2ff66, transparent),
@@ -112,9 +112,16 @@
     .page{display:none}
     .page.active{display:block}
 
-    /* Toast */
+    /* Toast & modal */
     .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s}
     .toast.show{opacity:1}
+
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px}
+    .modal{max-width:680px;width:100%;background:var(--card);border:1px solid #e5e7eb;border-radius:16px;box-shadow:var(--shadow);padding:16px}
+    body[data-theme="dark"] .modal{border-color:#1f2a44}
+    .modal header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .modal header h3{margin:0}
+    .modal .close{background:transparent;border:0;font-size:22px;cursor:pointer}
 
     /* Hero media – single, tasteful image (dog), scaled down */
     .hero-media{position:relative;min-height:320px}
@@ -130,7 +137,7 @@
       background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.12));
       pointer-events:none;
     }
-    /* let hero text overlap the image slightly for a modern look */
+    /* let hero text overlap slightly */
     .hero .hero-copy{position:relative; z-index:2}
     .hero .hero-copy .overlap-pill{
       display:inline-flex; align-items:center; gap:8px;
@@ -139,7 +146,12 @@
     }
     body[data-theme="dark"] .hero .hero-copy .overlap-pill{background:#17325f;color:#a9c7ff}
 
-    @media (max-width:860px){ .hero-media{display:none} }
+    /* Profile summary card */
+    .profile-summary{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:rgba(255,255,255,.6)}
+    body[data-theme="dark"] .profile-summary{background:rgba(17,24,39,.5);border-color:#1f2a44}
+    .avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#a5b4fc,#93c5fd);display:flex;align-items:center;justify-content:center;color:#0b2a6b;font-weight:800}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#eef6ff;color:#0b62d6;font-size:12px}
+    body[data-theme="dark"] .pill{background:#17325f;color:#a9c7ff}
   </style>
 </head>
 <body>
@@ -243,6 +255,20 @@
         <button class="btn" id="save_profile">Save profile</button>
         <button class="btn secondary" id="clear_profile">Clear</button>
       </div>
+
+      <div class="hr"></div>
+      <div class="profile-summary" id="profile_summary" style="display:none">
+        <div class="avatar" id="profile_avatar">AH</div>
+        <div>
+          <div style="font-weight:800" id="profile_title">—</div>
+          <div class="muted" id="profile_sub">—</div>
+          <div class="row" id="profile_badges" style="margin-top:6px;gap:6px"></div>
+        </div>
+      </div>
+
+      <h3 class="subtitle" style="margin-top:14px">My posted tasks</h3>
+      <ul id="my_tasks" class="cards"></ul>
+
       <p class="muted" style="margin-top:8px">Profiles are stored locally in this MVP. When we add verification and payments, you’ll be able to sync securely.</p>
     </section>
 
@@ -297,6 +323,44 @@
     <div class="footer">© AnyHelp? – Community powered • Please use this service safely and responsibly • Get verified for better matches</div>
   </main>
 
+  <!-- ========= GLOBAL POST TASK MODAL ========= -->
+  <div class="modal-backdrop" id="post_modal_backdrop" role="dialog" aria-modal="true" aria-labelledby="post_modal_title">
+    <div class="modal">
+      <header>
+        <h3 id="post_modal_title">Post a Task</h3>
+        <button class="close" id="post_modal_close" aria-label="Close">×</button>
+      </header>
+      <div class="grid">
+        <input id="m_taskTitle" placeholder="Task title (e.g., Carry a sofa upstairs)"/>
+        <select id="m_taskCategory">
+          <option value="">Category</option>
+          <option>Moving and lifting</option>
+          <option>Repairs and DIY</option>
+          <option>Gardening</option>
+          <option>Errands</option>
+          <option>Tool lending</option>
+          <option>Pet help</option>
+        </select>
+        <textarea id="m_taskDescription" placeholder="Describe the task…" class="grid-1"></textarea>
+        <input id="m_taskPostcode" placeholder="Postcode, e.g., SA1 6ET"/>
+        <input type="number" id="m_taskPrice" placeholder="Offer £" min="0" step="1"/>
+        <input type="datetime-local" id="m_taskWhen"/>
+        <label class="row"><input type="checkbox" id="m_needsVerified"/> Prefer verified neighbours only</label>
+
+        <div class="grid-1">
+          <label class="muted" for="m_payMethod">Payment method</label>
+          <select id="m_payMethod">
+            <option value="cash">Cash / bank transfer</option>
+            <option value="stripe">Stripe payment link</option>
+          </select>
+        </div>
+        <input id="m_stripeLink" placeholder="Stripe Payment Link URL (optional)" />
+        <button id="m_postBtn" class="btn">Post Task</button>
+      </div>
+      <p class="muted" style="margin-top:10px">Tip: You can generate a Stripe Payment Link in your Stripe dashboard and paste it here for this task.</p>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -312,10 +376,11 @@
     const THEME_KEY = 'ah.theme';
 
     const toastEl = $('#toast');
-    function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 1800); }
+    function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 2000); }
     function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
     function normPC(pc){ return (pc||'').toUpperCase().replace(/\s+/g,'').trim(); }
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    function firstInitials(name){ return (name||'A H').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase() || 'AH'; }
 
     // Haversine
     function distanceKm(a,b){ if(!a||!b) return Infinity; const R=6371,toRad=x=>x*Math.PI/180; const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lon-a.lon); const lat1=toRad(a.lat), lat2=toRad(b.lat); const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
@@ -350,26 +415,45 @@
       try{ const res = await fetch(url); if(!res.ok) throw new Error('geocode failed'); const data = await res.json(); const f = data.features?.[0]; if(!f || !Array.isArray(f.center)) return null; const [lon,lat] = f.center; const loc = {lat,lon}; GEO_CACHE[key]=loc; saveGeo(); return loc; } catch(e){ console.warn('Geocode error', e); return null; }
     }
 
-    // ========= Posting tasks =========
-    function postTask(){
-      const title = $('#taskTitle').value.trim();
-      const description = $('#taskDescription').value.trim();
-      const category = $('#taskCategory').value;
-      const postcode = normPC($('#taskPostcode').value);
-      const price = Number($('#taskPrice').value);
-      const when = $('#taskWhen').value || null;
-      const preferVerified = $('#needsVerified').checked;
+    // ========= Post Task (modal) =========
+    function openPostModal(){
+      $('#post_modal_backdrop').style.display = 'flex';
+      // prefill from profile where sensible
+      $('#m_taskPostcode').value = profile.p_pc || '';
+    }
+    function closePostModal(){ $('#post_modal_backdrop').style.display = 'none'; }
+
+    function postTaskFromModal(){
+      const title = $('#m_taskTitle').value.trim();
+      const description = $('#m_taskDescription').value.trim();
+      const category = $('#m_taskCategory').value;
+      const postcode = normPC($('#m_taskPostcode').value);
+      const price = Number($('#m_taskPrice').value);
+      const when = $('#m_taskWhen').value || null;
+      const preferVerified = $('#m_needsVerified').checked;
+      const payMethod = $('#m_payMethod').value;
+      const stripeLink = ($('#m_stripeLink').value || '').trim();
+
       if(!title || !description || !postcode){ toast('Please fill title, description & postcode'); return; }
       if(Number.isNaN(price) || price < 0){ toast('Enter a valid price (≥ £0)'); return; }
+      if(payMethod==='stripe' && stripeLink && !/^https?:\/\//i.test(stripeLink)){ toast('Stripe link must start with http(s)'); return; }
+
       const t = {
         id:uid(), title, description, category, postcode, price, when, preferVerified,
         createdAt:Date.now(), status:'open',
-        poster:{ name: (profile.p_name || 'Neighbour'), verified: !!profile.h_uni_verified, neighbourVerified:false }
+        poster:{ name:(profile.p_name||'Neighbour'), email:(profile.p_email||''), verified: !!profile.h_uni_verified, neighbourVerified:false },
+        payment:{ method: payMethod, link: stripeLink || '' }
       };
-      tasks.unshift(t); saveTasks(); displayTasks(); clearPostForm(); toast('Task posted'); location.hash = '#/tasks';
+      tasks.unshift(t); saveTasks();
+      closePostModal();
+      toast('Task posted');
+      location.hash = '#/tasks';
+      displayTasks();
       bumpStats();
+      // clear modal form
+      ['#m_taskTitle','#m_taskDescription','#m_taskCategory','#m_taskPostcode','#m_taskPrice','#m_taskWhen','#m_stripeLink'].forEach(sel=>{ const el=$(sel); if(!el) return; el.value=''; });
+      $('#m_needsVerified').checked=false; $('#m_payMethod').value='cash';
     }
-    function clearPostForm(){ ['#taskTitle','#taskDescription','#taskCategory','#taskPostcode','#taskPrice','#taskWhen'].forEach(sel=>{ const el=$(sel); if(!el) return; if(el.tagName==='SELECT') el.value=''; else el.value=''; }); $('#needsVerified').checked=false; }
 
     // ========= Trust score (demo) =========
     function trustScore(t){ let s=0; if(t.poster?.verified) s+=1; if(t.poster?.neighbourVerified) s+=2; if(t.preferVerified) s+=0.5; return s; }
@@ -391,22 +475,21 @@
       switch(sortBy){
         case 'nearest': out.sort((a,b)=>a._dist-b._dist); break;
         case 'priceHigh': out.sort((a,b)=>b.price-a.price); break;
-        case 'priceLow': out.sort((a,b)=>a.price-b-price); break; /* bugfix below */
+        case 'priceLow': out.sort((a,b)=>a.price-b.price); break;
         case 'trust': out.sort((a,b)=> (b._trust-a._trust) || (a._dist-b._dist)); break;
         default: out.sort((a,b)=>b.createdAt-a.createdAt);
       }
-      /* fix the priceLow comparator (typo) */
-      if($('#sortBy')?.value==='priceLow'){ out.sort((a,b)=>a.price-b.price); }
-
       if(!out.length){ ul.innerHTML = `<li class="card task"><em>No tasks yet, be the first to post</em></li>`; return; }
       ul.innerHTML='';
       for(const t of out){
         const distStr = isFinite(t._dist) ? `${t._dist.toFixed(1)} km away` : 'distance unknown';
         const whenStr = t.when ? new Date(t.when).toLocaleString() : 'Flexible';
-        const trustBadges = [];
-        if(t.poster?.verified) trustBadges.push('<span class="badge">Uni verified</span>');
-        if(t.poster?.neighbourVerified) trustBadges.push('<span class="badge">Neighbour verified</span>');
-        if(t.preferVerified) trustBadges.push('<span class="badge">Prefers verified</span>');
+        const badges = [];
+        if(t.poster?.verified) badges.push('<span class="badge">Uni verified</span>');
+        if(t.poster?.neighbourVerified) badges.push('<span class="badge">Neighbour verified</span>');
+        if(t.preferVerified) badges.push('<span class="badge">Prefers verified</span>');
+        const payBadge = t.payment?.method==='stripe' ? '<span class="badge">Stripe</span>' : '<span class="badge">Cash/Bank</span>';
+
         const li = document.createElement('li'); li.className='card task';
         li.innerHTML = `
           <div class="row" style="justify-content:space-between">
@@ -419,21 +502,26 @@
             <span class="muted">${t.postcode}</span>
             <span class="muted">${distStr}</span>
             <span class="muted">When: ${whenStr}</span>
-            ${trustBadges.join(' ')}
+            ${badges.join(' ')}
+            ${payBadge}
           </div>
           <div class="row" style="margin-top:8px">
             <button class="btn" data-id="${t.id}" data-act="accept">I can help</button>
             <button class="btn secondary" data-id="${t.id}" data-act="share">Share</button>
+            ${t.payment?.method==='stripe' && t.payment?.link ? `<a class="btn secondary" href="${escapeHtml(t.payment.link)}" target="_blank" rel="noopener" data-id="${t.id}" data-act="pay">Pay now</a>` : ''}
             <button class="btn secondary" data-id="${t.id}" data-act="done">Mark complete</button>
           </div>`;
         ul.appendChild(li);
       }
       $('#tasks').onclick = (e)=>{
-        const btn = e.target.closest('button'); if(!btn) return; const id = btn.dataset.id; const act = btn.dataset.act; const t = tasks.find(x=>x.id===id); if(!t) return;
+        const btn = e.target.closest('button'); if(!btn) return;
+        const id = btn.dataset.id; const act = btn.dataset.act; const t = tasks.find(x=>x.id===id); if(!t) return;
         if(act==='accept'){ toast('In MVP this would open chat / request flow'); }
         if(act==='share'){ const text = `AnyHelp? • ${t.title} (${t.postcode}) – ${t.description}`; if(navigator.share) navigator.share({title:'AnyHelp?',text}); else { navigator.clipboard.writeText(text); toast('Task copied'); } }
         if(act==='done'){ const code = prompt('Enter the 4-digit handover code to complete'); if(!code || !/^\\d{4}$/.test(code)) return toast('Invalid code'); t.status='done'; saveTasks(); displayTasks(); toast('Completed'); }
       }
+      // Also refresh "My posted tasks" if on profile
+      renderMyTasks();
     }
 
     // ========= Geolocation =========
@@ -473,6 +561,8 @@
       $('#h_skills') && ($('#h_skills').value = profile.h_skills||'');
       $('#h_rate') && ($('#h_rate').value = profile.h_rate||'');
       $('#h_avail') && ($('#h_avail').value = profile.h_avail||'');
+      renderProfileSummary();
+      renderMyTasks();
     }
     function saveProfileUI(){
       const role = currentRole || 'poster';
@@ -491,6 +581,47 @@
       profile.h_rate = $('#h_rate')?.value.trim() || '';
       profile.h_avail = $('#h_avail')?.value.trim() || '';
       saveProfile(); toast('Profile saved');
+      renderProfileSummary();
+      renderMyTasks();
+    }
+    function renderProfileSummary(){
+      const wrap = $('#profile_summary'); if(!wrap) return;
+      const name = (profile.p_name || profile.h_name || '').trim();
+      const email = (profile.p_email || profile.h_email || '').trim();
+      if(!name && !email){ wrap.style.display='none'; return; }
+      wrap.style.display='';
+      $('#profile_avatar').textContent = firstInitials(name || 'Any Help');
+      const roleLabel = profile.role==='helper' ? 'Helper' : 'Poster';
+      $('#profile_title').textContent = name ? `${name} • ${roleLabel}` : roleLabel;
+      $('#profile_sub').textContent = email || '';
+      const badges = [];
+      if(profile.h_uni_verified) badges.push('<span class="pill">Uni verified</span>');
+      if((profile.p_prefcats||'').trim()) badges.push(`<span class="pill">Prefers: ${escapeHtml(profile.p_prefcats)}</span>`);
+      if((profile.h_skills||'').trim()) badges.push(`<span class="pill">Skills: ${escapeHtml(profile.h_skills)}</span>`);
+      $('#profile_badges').innerHTML = badges.join(' ');
+    }
+    function renderMyTasks(){
+      const ul = $('#my_tasks'); if(!ul) return;
+      const myEmail = (profile.p_email||'').trim();
+      const mine = myEmail ? tasks.filter(t=> (t.poster?.email||'')===myEmail) : [];
+      ul.innerHTML = '';
+      if(!mine.length){ ul.innerHTML = '<li class="card task"><em>No posted tasks yet</em></li>'; return; }
+      for(const t of mine){
+        const li = document.createElement('li'); li.className='card task';
+        li.innerHTML = `
+          <div class="row" style="justify-content:space-between">
+            <div><strong>${escapeHtml(t.title)}</strong> <span class="muted">(${t.postcode})</span></div>
+            <div class="price">£${Number.isFinite(t.price)?t.price:'—'}</div>
+          </div>
+          <div class="muted">${escapeHtml(t.description)}</div>
+          <div class="row" style="margin-top:6px">
+            <span class="badge">${t.category||'General'}</span>
+            <span class="muted">When: ${t.when ? new Date(t.when).toLocaleString() : 'Flexible'}</span>
+            <span class="muted">Status: ${t.status}</span>
+            <span class="badge">${t.payment?.method==='stripe'?'Stripe':'Cash/Bank'}</span>
+          </div>`;
+        ul.appendChild(li);
+      }
     }
 
     // Role switcher
@@ -523,9 +654,14 @@
     window.addEventListener('hashchange', router);
 
     // Bind buttons
-    $('#postBtn')?.addEventListener('click', postTask);
-    $('#hero-post')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').focus(), 50); });
-    $('#btn-post-cta')?.addEventListener('click', ()=>{ location.hash = '#/home'; setTimeout(()=>$('#taskTitle').scrollIntoView({behavior:'smooth'}), 50); });
+    $('#hero-post')?.addEventListener('click', openPostModal);
+    $('#btn-post-cta')?.addEventListener('click', openPostModal);
+    $('#post_modal_close')?.addEventListener('click', closePostModal);
+    $('#post_modal_backdrop')?.addEventListener('click', (e)=>{ if(e.target.id==='post_modal_backdrop') closePostModal(); });
+    $('#m_postBtn')?.addEventListener('click', postTaskFromModal);
+
+    $('#save_profile')?.addEventListener('click', saveProfileUI);
+    $('#clear_profile')?.addEventListener('click', ()=>{ profile = {}; saveProfile(); loadProfileUI(); toast('Profile cleared'); });
 
     // Filters events
     ['#q','#filterCategory','#sortBy','#myPostcode'].forEach(sel=>{ const el = document.querySelector(sel); if(el) el.addEventListener('input', displayTasks); });
