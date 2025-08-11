@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AnyHelp? – Hyperlocal Tasks</title>
+  <style>
+    :root { --brand:#0a7aff; --ink:#111; --bg:#f7f8fa; --card:#fff; --muted:#6b7280; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+    header { background: var(--brand); color: #fff; padding: 1rem; text-align: center; }
+    main { padding: 1rem; max-width: 960px; margin: 0 auto; }
+    footer { padding: 1rem; text-align: center; color: var(--muted); }
+    section { background: var(--card); padding: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 1rem; }
+    .grid { display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid textarea { grid-column: 1 / -1; min-height: 96px; }
+    .grid .row { grid-column: 1 / -1; display: flex; gap: .5rem; align-items: center; }
+    input, select, textarea, button { width: 100%; padding: .65rem .75rem; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 1rem; background: #fff; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid #dbeafe; border-color: #bfdbfe; }
+    button { background: var(--brand); color: #fff; border: none; cursor: pointer; font-weight: 600; }
+    button:hover { filter: brightness(.95); }
+    .hint { color: var(--muted); margin-top: .5rem; }
+    .cards { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+    .card { border: 1px solid #eef2f7; border-radius: 12px; padding: .75rem; background: #fff; display: grid; gap: .5rem; }
+    .card .title { font-weight: 700; }
+    .meta { display: flex; flex-wrap: wrap; gap: .5rem; color: var(--muted); font-size: .9rem; }
+    .badge { display: inline-flex; align-items: center; gap: .35rem; padding: .25rem .5rem; border-radius: 999px; background: #eef6ff; color: #0b62d6; font-size: .8rem; }
+    .price { font-weight: 700; }
+    .actions { display: flex; gap: .5rem; }
+    .actions button { flex: none; padding: .5rem .75rem; border-radius: 8px; }
+    .geo-status { font-size: .85rem; color: var(--muted); }
+    @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AnyHelp?</h1>
+    <p>Real neighbours, real help, right now</p>
+  </header>
+
+  <main>
+    <section class="post-task">
+      <h2>Post a Task</h2>
+      <div class="grid">
+        <input type="text" id="taskTitle" placeholder="Task title" />
+        <textarea id="taskDescription" placeholder="Describe the task..."></textarea>
+        <select id="taskCategory">
+          <option value="">Category</option>
+          <option>Moving and lifting</option>
+          <option>Repairs and DIY</option>
+          <option>Gardening</option>
+          <option>Errands</option>
+          <option>Tool lending</option>
+          <option>Pet help</option>
+        </select>
+        <input type="text" id="taskPostcode" placeholder="Postcode, e.g. SA1 6ET" />
+        <input type="number" id="taskPrice" placeholder="Offer £" min="0" step="1" />
+        <input type="datetime-local" id="taskWhen" />
+        <label class="row">
+          <input type="checkbox" id="needsVerified" />
+          Prefer verified neighbours only
+        </label>
+        <button id="postBtn">Post Task</button>
+      </div>
+      <p class="hint">Never post sensitive info, agree to meet in public for first jobs, use handover codes.</p>
+    </section>
+
+    <section class="filters">
+      <h2>Find Tasks</h2>
+      <div class="grid">
+        <input type="search" id="q" placeholder="Search title or description" />
+        <select id="filterCategory">
+          <option value="">All categories</option>
+          <option>Moving and lifting</option>
+          <option>Repairs and DIY</option>
+          <option>Gardening</option>
+          <option>Errands</option>
+          <option>Tool lending</option>
+          <option>Pet help</option>
+        </select>
+        <select id="sortBy">
+          <option value="recent">Most recent</option>
+          <option value="nearest">Nearest</option>
+          <option value="priceHigh">Price, high to low</option>
+          <option value="priceLow">Price, low to high</option>
+          <option value="trust">Trust first</option>
+        </select>
+        <input type="text" id="myPostcode" placeholder="Your postcode for distance" />
+        <button id="locateBtn">Use my location</button>
+      </div>
+      <div class="geo-status" id="geoStatus">Geocoding cache: 0 postcodes</div>
+    </section>
+
+    <section class="task-list">
+      <h2>Available Tasks</h2>
+      <ul id="tasks" class="cards"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <small>© AnyHelp? • Community powered • Use at your own risk • Get verified for better matches</small>
+  </footer>
+
+  <script>
+    // ===== CONFIG =====
+    // Replace this with your real Mapbox public token (pk.*). Restrict it to your domain in Mapbox dashboard.
+    const MAPBOX_TOKEN = "pk.YOUR_PUBLIC_TOKEN_HERE";
+
+    // ===== Utilities =====
+    const $ = (sel) => document.querySelector(sel);
+    const $all = (sel) => [...document.querySelectorAll(sel)];
+    const LS_KEY = "anyhelp.tasks.v1";
+    const GEO_LS_KEY = "anyhelp.postcodeGeo.v1";
+
+    function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+    function normPostcode(pc) { return (pc || "").toUpperCase().replace(/\s+/g, "").trim(); }
+    function escapeHtml(s) { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+
+    // Haversine distance in km
+    function distanceKm(a, b) {
+      if (!a || !b) return Infinity;
+      const R = 6371, toRad = (x) => x * Math.PI / 180;
+      const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
+      const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+      const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+      return 2 * R * Math.asin(Math.sqrt(h));
+    }
+
+    // ===== Persistence =====
+    function loadTasks() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
+    function saveTasks() { localStorage.setItem(LS_KEY, JSON.stringify(tasks)); }
+
+    let GEO_CACHE = {}; try { GEO_CACHE = JSON.parse(localStorage.getItem(GEO_LS_KEY)) || {}; } catch {}
+    function saveGeoCache() { localStorage.setItem(GEO_LS_KEY, JSON.stringify(GEO_CACHE)); updateGeoStatus(); }
+    function updateGeoStatus() { $("#geoStatus").textContent = `Geocoding cache: ${Object.keys(GEO_CACHE).length} postcodes`; }
+
+    // ===== Geocoding via Mapbox =====
+    async function geocodePostcode(pc) {
+      const key = normPostcode(pc);
+      if (!key) return null;
+      if (GEO_CACHE[key]) return GEO_CACHE[key];
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(key)}.json?country=GB&types=postcode&limit=1&access_token=${MAPBOX_TOKEN}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Geocoding failed");
+        const data = await res.json();
+        const f = data.features?.[0];
+        if (!f || !Array.isArray(f.center)) return null;
+        const [lon, lat] = f.center;
+        const loc = { lat, lon };
+        GEO_CACHE[key] = loc;
+        saveGeoCache();
+        return loc;
+      } catch (e) {
+        console.warn("Geocoding error", e);
+        return null;
+      }
+    }
+
+    // ===== State =====
+    let tasks = loadTasks();
+    let myLocation = null; // {lat, lon}
+
+    // Demo seed (optional): uncomment to see tasks immediately
+    // if (!tasks.length) {
+    //   tasks = [
+    //     {id:uid(), title:"Carry a sofa up stairs", description:"2 floors, 15 mins", category:"Moving and lifting", postcode:"SA16ET", price:15, when:null, preferVerified:true, createdAt: Date.now()-3_600_000, status:"open", poster:{name:"Neighbour", verified:true, neighbourVerified:false}},
+    //     {id:uid(), title:"Borrow a drill", description:"Need for 1 hour", category:"Tool lending", postcode:"SA12AB", price:0, when:null, preferVerified:false, createdAt: Date.now()-900_000, status:"open", poster:{name:"Neighbour", verified:false, neighbourVerified:true}}
+    //   ];
+    //   saveTasks();
+    // }
+
+    // ===== Posting =====
+    function postTask() {
+      const title = $("#taskTitle").value.trim();
+      const description = $("#taskDescription").value.trim();
+      const category = $("#taskCategory").value;
+      const postcode = normPostcode($("#taskPostcode").value);
+      const price = Number($("#taskPrice").value);
+      const when = $("#taskWhen").value;
+      const preferVerified = $("#needsVerified").checked;
+
+      if (!title || !description || !postcode) return alert("Please fill in title, description, and postcode.");
+      if (Number.isNaN(price) || price < 0) return alert("Please enter a valid price, £0 or more.");
+
+      const task = {
+        id: uid(), title, description, category, postcode, price,
+        when: when || null, preferVerified,
+        createdAt: Date.now(), status: "open",
+        poster: { name: "Neighbour", verified: Math.random() < 0.35, neighbourVerified: Math.random() < 0.15 }
+      };
+      tasks.unshift(task);
+      saveTasks();
+      displayTasks();
+      clearForm();
+    }
+
+    function clearForm() {
+      $("#taskTitle").value = "";
+      $("#taskDescription").value = "";
+      $("#taskCategory").value = "";
+      $("#taskPostcode").value = "";
+      $("#taskPrice").value = "";
+      $("#taskWhen").value = "";
+      $("#needsVerified").checked = false;
+    }
+
+    // ===== Trust score (demo) =====
+    function trustScore(t) {
+      let s = 0;
+      if (t.poster?.verified) s += 1;
+      if (t.poster?.neighbourVerified) s += 2;
+      if (t.preferVerified) s += 0.5;
+      return s;
+    }
+
+    // ===== Ranking =====
+    function rankTasks(list, myCoords, coordsByTaskId) {
+      const q = $("#q").value.trim().toLowerCase();
+      const cat = $("#filterCategory").value;
+      const sortBy = $("#sortBy").value;
+
+      let out = list.filter(t => t.status === "open");
+      if (q) out = out.filter(t => (t.title + " " + t.description).toLowerCase().includes(q));
+      if (cat) out = out.filter(t => t.category === cat);
+
+      out = out.map(t => {
+        const there = coordsByTaskId[t.id] || null;
+        const dist = myCoords && there ? distanceKm(myCoords, there) : Infinity;
+        return { ...t, _dist: dist, _trust: trustScore(t) };
+      });
+
+      switch (sortBy) {
+        case "nearest": out.sort((a,b) => a._dist - b._dist); break;
+        case "priceHigh": out.sort((a,b) => b.price - a.price); break;
+        case "priceLow": out.sort((a,b) => a.price - b.price); break;
+        case "trust": out.sort((a,b) => (b._trust - a._trust) || (a._dist - b._dist)); break;
+        default: out.sort((a,b) => b.createdAt - a.createdAt);
+      }
+      return out;
+    }
+
+    // ===== Render =====
+    async function displayTasks() {
+      const ul = $("#tasks");
+      ul.innerHTML = `<li class="card"><em>Loading tasks…</em></li>`;
+
+      // My coordinates: geolocation wins, else try postcode
+      let myCoords = null;
+      if (myLocation) {
+        myCoords = myLocation;
+      } else {
+        const pc = normPostcode($("#myPostcode").value);
+        if (pc) myCoords = await geocodePostcode(pc);
+      }
+
+      // Geocode all unique task postcodes in parallel
+      const unique = [...new Set(tasks.map(t => normPostcode(t.postcode)))];
+      const coordsMap = {};
+      await Promise.all(unique.map(async pc => {
+        const loc = await geocodePostcode(pc);
+        if (loc) coordsMap[pc] = loc;
+      }));
+
+      const coordsByTaskId = {};
+      for (const t of tasks) {
+        const key = normPostcode(t.postcode);
+        if (coordsMap[key]) coordsByTaskId[t.id] = coordsMap[key];
+      }
+
+      const list = rankTasks(tasks, myCoords, coordsByTaskId);
+
+      ul.innerHTML = "";
+      if (!list.length) {
+        ul.innerHTML = `<li class="card"><em>No tasks yet, be the first to post</em></li>`;
+        return;
+      }
+
+      for (const t of list) {
+        const li = document.createElement("li");
+        li.className = "card";
+        const trustBadges = [];
+        if (t.poster?.verified) trustBadges.push(`<span class="badge">ID verified</span>`);
+        if (t.poster?.neighbourVerified) trustBadges.push(`<span class="badge">Neighbour verified</span>`);
+        if (t.preferVerified) trustBadges.push(`<span class="badge">Prefers verified</span>`);
+        const whenStr = t.when ? new Date(t.when).toLocaleString() : "Flexible";
+        const priceStr = Number.isFinite(t.price) ? `£${t.price}` : "Offer";
+        const distStr = isFinite(t._dist) ? `${t._dist.toFixed(1)} km away` : "distance unknown";
+
+        li.innerHTML = `
+          <div class="title">${escapeHtml(t.title)}</div>
+          <div>${escapeHtml(t.description)}</div>
+          <div class="meta">
+            <span class="badge">${t.category || "General"}</span>
+            <span>Postcode: ${t.postcode}</span>
+            <span>${distStr}</span>
+            <span>When: ${whenStr}</span>
+            <span class="price">${priceStr}</span>
+            ${trustBadges.join(" ")}
+          </div>
+          <div class="actions">
+            <button data-id="${t.id}" class="accept">I can help</button>
+            <button data-id="${t.id}" class="share">Share</button>
+            <button data-id="${t.id}" class="done">Mark complete</button>
+          </div>
+        `;
+        ul.appendChild(li);
+      }
+
+      $all(".accept").forEach(b => b.onclick = () => acceptTask(b.dataset.id));
+      $all(".share").forEach(b => b.onclick = () => shareTask(b.dataset.id));
+      $all(".done").forEach(b => b.onclick = () => completeTask(b.dataset.id));
+    }
+
+    // ===== Actions =====
+    function acceptTask(id) { alert("In the MVP, this will open a chat or request flow. For now we will just highlight your interest."); }
+    function shareTask(id) {
+      const t = tasks.find(x => x.id === id);
+      const text = `AnyHelp? • ${t.title} (${t.postcode}) – ${t.description}`;
+      if (navigator.share) navigator.share({ title: "AnyHelp?", text });
+      else { navigator.clipboard.writeText(text); alert("Task copied to clipboard"); }
+    }
+    function completeTask(id) {
+      const code = prompt("Enter the 4-digit handover code to complete");
+      if (!code) return;
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      if (!/^\d{4}$/.test(code)) return alert("Invalid code");
+      t.status = "done";
+      saveTasks();
+      displayTasks();
+    }
+
+    // ===== Geolocation =====
+    $("#locateBtn").addEventListener("click", () => {
+      if (!navigator.geolocation) return alert("Geolocation not available");
+      navigator.geolocation.getCurrentPosition(
+        pos => { myLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude }; displayTasks(); },
+        () => alert("Could not get your location")
+      );
+    });
+
+    // ===== Events =====
+    $("#postBtn").addEventListener("click", postTask);
+    ["#q","#filterCategory","#sortBy","#myPostcode"].forEach(sel => { $(sel).addEventListener("input", displayTasks); });
+
+    document.addEventListener("DOMContentLoaded", () => { updateGeoStatus(); displayTasks(); });
+  </script>
+</body>
+</html>
